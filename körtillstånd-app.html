@@ -324,13 +324,15 @@ function setSyncStatus(state, text) {
 
 // ── Save row via Apps Script ──────────────────────────────────────
 async function saveRow(row) {
-  const res = await fetch(APPS_SCRIPT_URL, {
+  // Use no-cors to avoid CORS preflight issues with Apps Script
+  await fetch(APPS_SCRIPT_URL, {
     method: 'POST',
-    headers: {'Content-Type': 'application/json'},
+    mode: 'no-cors',
+    headers: {'Content-Type': 'text/plain'},
     body: JSON.stringify({ action: 'write', row })
   });
-  const text = await res.text();
-  if (text !== 'OK') throw new Error(text);
+  // no-cors returns opaque response, so we just wait and assume success
+  await new Promise(r => setTimeout(r, 1500));
 }
 
 // ── Kiosk ─────────────────────────────────────────────────────────
