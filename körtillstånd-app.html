@@ -340,31 +340,10 @@ function kioskSearch() {
   const query = document.getElementById('k-input').value.trim();
   if (!query) return;
   const lower = query.toLowerCase();
-  let match = db.find(r => r.name.toLowerCase() === lower)
-           || db.find(r => r.name.toLowerCase().includes(lower));
+  const matches = db.filter(r => r.name.toLowerCase().includes(lower));
   const area = document.getElementById('kiosk-result');
-  if (match) {
-    area.innerHTML = `
-      <div class="result-card">
-        <div class="rc-header green">
-          <div class="rc-icon">✅</div>
-          <div><div class="rc-title">Körtillstånd godkänt</div><div class="rc-sub">${esc(match.name)}</div></div>
-        </div>
-        <div class="rc-body">
-          <div class="info-grid">
-            <div class="info-tile"><div class="info-tile-label">Datum</div><div class="info-tile-value">${esc(match.date)}</div></div>
-            <div class="info-tile"><div class="info-tile-label">Inregistrerad av</div><div class="info-tile-value">${esc(match.by)}</div></div>
-            <div class="info-tile"><div class="info-tile-label">Dokument</div><div class="info-tile-value">${match.doc?`<a href="${esc(match.doc)}" target="_blank" style="color:var(--blue);text-decoration:underline">Öppna</a>`:'—'}</div></div>
-          </div>
-          <div class="checks">
-            <div class="chk ${match.bev==='ja'?'yes':'no'}">${match.bev==='ja'?'✓':'✗'} Utbildningsbevis</div>
-            <div class="chk ${match.regl==='ja'?'yes':'no'}">${match.regl==='ja'?'✓':'✗'} Regler delgivna</div>
-            <div class="chk ${match.kort==='ja'?'yes':'no'}">${match.kort==='ja'?'✓':'✗'} Körtillstånd utfärdat</div>
-          </div>
-          <button class="btn-reset" onclick="resetKiosk()">Ny sökning</button>
-        </div>
-      </div>`;
-  } else {
+
+  if (matches.length === 0) {
     area.innerHTML = `
       <div class="result-card">
         <div class="rc-header red">
@@ -377,7 +356,59 @@ function kioskSearch() {
           <button class="btn-reset" onclick="resetKiosk()">Försök igen</button>
         </div>
       </div>`;
+  } else if (matches.length === 1) {
+    showDriverResult(matches[0]);
+  } else {
+    // Multiple matches — show list
+    area.innerHTML = `
+      <div class="result-card" style="border-radius:20px;overflow:hidden;box-shadow:var(--shadow-lg);animation:popIn .25s cubic-bezier(.34,1.56,.64,1)">
+        <div class="rc-header" style="background:var(--blue)">
+          <div class="rc-icon">👥</div>
+          <div>
+            <div class="rc-title">Flera träffar</div>
+            <div class="rc-sub">Välj rätt person nedan</div>
+          </div>
+        </div>
+        <div class="rc-body" style="padding:16px 24px">
+          ${matches.map((r, i) => `
+            <div onclick="showDriverResult(db.filter(x=>x.name.toLowerCase().includes('${lower}'))[${i}])"
+              style="display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-radius:12px;border:1.5px solid var(--border);margin-bottom:10px;cursor:pointer;transition:all .15s;background:var(--bg)"
+              onmouseover="this.style.borderColor='var(--blue)';this.style.background='white'"
+              onmouseout="this.style.borderColor='var(--border)';this.style.background='var(--bg)'">
+              <div>
+                <div style="font-weight:700;font-size:16px;color:var(--blue)">${esc(r.name)}</div>
+                <div style="font-size:12px;color:var(--muted);margin-top:3px">Registrerad: ${esc(r.date)} · av ${esc(r.by)}</div>
+              </div>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+            </div>`).join('')}
+          <button class="btn-reset" onclick="resetKiosk()">Ny sökning</button>
+        </div>
+      </div>`;
   }
+}
+
+function showDriverResult(match) {
+  const area = document.getElementById('kiosk-result');
+  area.innerHTML = `
+    <div class="result-card">
+      <div class="rc-header green">
+        <div class="rc-icon">✅</div>
+        <div><div class="rc-title">Körtillstånd godkänt</div><div class="rc-sub">${esc(match.name)}</div></div>
+      </div>
+      <div class="rc-body">
+        <div class="info-grid">
+          <div class="info-tile"><div class="info-tile-label">Datum</div><div class="info-tile-value">${esc(match.date)}</div></div>
+          <div class="info-tile"><div class="info-tile-label">Inregistrerad av</div><div class="info-tile-value">${esc(match.by)}</div></div>
+          <div class="info-tile"><div class="info-tile-label">Dokument</div><div class="info-tile-value">${match.doc?`<a href="${esc(match.doc)}" target="_blank" style="color:var(--blue);text-decoration:underline">Öppna</a>`:'—'}</div></div>
+        </div>
+        <div class="checks">
+          <div class="chk ${match.bev==='ja'?'yes':'no'}">${match.bev==='ja'?'✓':'✗'} Utbildningsbevis</div>
+          <div class="chk ${match.regl==='ja'?'yes':'no'}">${match.regl==='ja'?'✓':'✗'} Regler delgivna</div>
+          <div class="chk ${match.kort==='ja'?'yes':'no'}">${match.kort==='ja'?'✓':'✗'} Körtillstånd utfärdat</div>
+        </div>
+        <button class="btn-reset" onclick="resetKiosk()">Ny sökning</button>
+      </div>
+    </div>`;
 }
 
 function resetKiosk() {
