@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Körtillstånd – Orkla Kumla</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400&family=Barlow+Condensed:wght@600;700;800&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --red: #c8102e; --green: #1a7a3c; --blue: #1a3a5c;
+  --yellow: #f0c040; --bg: #eef1f7; --surface: #ffffff;
+  --border: #dde3ee; --text: #0f1c2e; --muted: #6b7a99; --dim: #b0b8cc;
+  --radius: 14px; --shadow: 0 2px 16px rgba(15,28,46,0.09);
+  --shadow-lg: 0 8px 48px rgba(15,28,46,0.14);
+}
+html, body { height: 100%; background: var(--bg); font-family: 'Barlow', sans-serif; color: var(--text); }
+
+.topbar { background: var(--blue); height: 60px; display: flex; align-items: center; padding: 0 32px; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 16px rgba(15,28,46,0.2); }
+.logo { font-family: 'Barlow Condensed', sans-serif; font-size: 20px; font-weight: 800; color: white; text-transform: uppercase; letter-spacing: .05em; margin-right: 40px; }
+.logo span { color: var(--yellow); }
+.nav { display: flex; gap: 4px; flex: 1; }
+.nav-btn { background: none; border: none; color: rgba(255,255,255,0.6); font-family: 'Barlow', sans-serif; font-size: 14px; font-weight: 600; padding: 8px 18px; border-radius: 8px; cursor: pointer; transition: all .15s; text-transform: uppercase; letter-spacing: .05em; display: flex; align-items: center; gap: 7px; }
+.nav-btn:hover { background: rgba(255,255,255,0.1); color: white; }
+.nav-btn.active { background: rgba(255,255,255,0.15); color: white; }
+.topbar-right { margin-left: auto; display: flex; align-items: center; gap: 16px; }
+.clock { font-family: 'Barlow Condensed', sans-serif; font-size: 18px; font-weight: 600; color: rgba(255,255,255,0.6); }
+.db-count { font-size: 12px; font-weight: 600; background: rgba(255,255,255,0.12); color: rgba(255,255,255,0.7); padding: 4px 12px; border-radius: 20px; }
+.sync-indicator { font-size: 11px; color: rgba(255,255,255,0.5); display: flex; align-items: center; gap: 6px; }
+.sync-dot { width: 8px; height: 8px; border-radius: 50%; background: #7fe8a0; }
+.sync-dot.syncing { background: var(--yellow); animation: spin 0.8s linear infinite; }
+.sync-dot.error { background: #ff6b6b; }
+@keyframes spin { to { transform: rotate(360deg); } }
+@keyframes pulse { 0%,100%{opacity:1}50%{opacity:.4} }
+
+.page { display: none; min-height: calc(100vh - 60px); }
+.page.active { display: block; }
+
+/* KIOSK */
+.kiosk { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: calc(100vh - 60px); padding: 40px 24px; gap: 32px; }
+.kiosk-welcome { text-align: center; }
+.kiosk-welcome h1 { font-family: 'Barlow Condensed', sans-serif; font-size: clamp(36px,5vw,64px); font-weight: 800; color: var(--blue); text-transform: uppercase; line-height: 1; }
+.kiosk-welcome p { font-size: clamp(15px,1.8vw,20px); color: var(--muted); margin-top: 10px; }
+.kiosk-search { width: 100%; max-width: 640px; }
+.search-box { background: var(--surface); border: 2px solid var(--border); border-radius: 16px; padding: 8px 8px 8px 24px; display: flex; align-items: center; gap: 12px; box-shadow: var(--shadow-lg); transition: border-color .2s; }
+.search-box:focus-within { border-color: var(--blue); }
+#k-input { flex: 1; border: none; outline: none; font-family: 'Barlow', sans-serif; font-size: clamp(22px,3vw,34px); font-weight: 500; color: var(--text); background: transparent; }
+#k-input::placeholder { color: var(--dim); }
+.btn-primary { background: var(--blue); color: white; border: none; border-radius: 10px; padding: 14px 28px; font-family: 'Barlow', sans-serif; font-size: clamp(14px,1.5vw,18px); font-weight: 700; cursor: pointer; transition: all .15s; text-transform: uppercase; letter-spacing: .05em; white-space: nowrap; }
+.btn-primary:hover { background: #0f2540; transform: translateY(-1px); }
+.kiosk-result { width: 100%; max-width: 720px; }
+.result-card { border-radius: 20px; overflow: hidden; box-shadow: var(--shadow-lg); animation: popIn .25s cubic-bezier(.34,1.56,.64,1); }
+@keyframes popIn { from{opacity:0;transform:scale(.94) translateY(12px)} to{opacity:1;transform:scale(1) translateY(0)} }
+.rc-header { padding: 28px 36px; display: flex; align-items: center; gap: 20px; }
+.rc-header.green { background: var(--green); }
+.rc-header.red { background: var(--red); }
+.rc-icon { font-size: 52px; }
+.rc-title { font-family: 'Barlow Condensed', sans-serif; font-size: clamp(26px,3.5vw,42px); font-weight: 800; color: white; text-transform: uppercase; line-height: 1; }
+.rc-subtitle { font-size: clamp(15px,1.8vw,20px); font-weight: 600; color: rgba(255,255,255,0.82); margin-top: 4px; }
+.rc-body { background: var(--surface); padding: 28px 36px; }
+.info-grid { display: grid; grid-template-columns: repeat(auto-fit,minmax(160px,1fr)); gap: 14px; margin-bottom: 20px; }
+.info-tile { background: var(--bg); border: 1px solid var(--border); border-radius: 12px; padding: 14px 18px; }
+.info-tile-label { font-size: 10px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .1em; margin-bottom: 5px; }
+.info-tile-value { font-size: 16px; font-weight: 700; color: var(--text); }
+.checks { display: flex; flex-wrap: wrap; gap: 10px; }
+.chk { display: flex; align-items: center; gap: 7px; padding: 9px 16px; border-radius: 9px; font-size: 13px; font-weight: 600; border: 1.5px solid; }
+.chk.yes { background: #eaf7ef; color: var(--green); border-color: #a8dfc0; }
+.chk.no  { background: #fdf0f2; color: var(--red);   border-color: #f5b3be; }
+.not-found-msg { text-align: center; padding: 24px 0; }
+.not-found-msg p { font-size: clamp(15px,1.8vw,19px); color: var(--muted); line-height: 1.7; }
+.not-found-msg strong { color: var(--text); }
+.btn-reset { display: block; margin: 22px auto 0; background: var(--bg); border: 1.5px solid var(--border); border-radius: 10px; padding: 11px 36px; font-family: 'Barlow', sans-serif; font-size: 13px; font-weight: 700; color: var(--muted); cursor: pointer; transition: all .15s; text-transform: uppercase; }
+.btn-reset:hover { border-color: var(--blue); color: var(--blue); background: white; }
+.idle-hint { text-align: center; padding: 24px; color: var(--dim); font-size: 16px; }
+.idle-hint .big { font-size: 48px; margin-bottom: 8px; }
+
+/* REGISTER */
+.reg-page { max-width: 720px; margin: 0 auto; padding: 40px 24px 80px; }
+.page-title { font-family: 'Barlow Condensed', sans-serif; font-size: 36px; font-weight: 800; color: var(--blue); text-transform: uppercase; margin-bottom: 6px; }
+.page-sub { font-size: 15px; color: var(--muted); margin-bottom: 32px; }
+.form-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 32px; box-shadow: var(--shadow); }
+.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+.form-group { display: flex; flex-direction: column; gap: 7px; }
+.form-group.full { grid-column: 1/-1; }
+label { font-size: 12px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .08em; }
+input[type=text], input[type=date] { background: var(--bg); border: 1.5px solid var(--border); border-radius: 10px; padding: 12px 16px; font-family: 'Barlow', sans-serif; font-size: 15px; font-weight: 500; color: var(--text); outline: none; transition: all .15s; }
+input[type=text]:focus, input[type=date]:focus { border-color: var(--blue); background: white; }
+.toggle-group { display: flex; gap: 8px; }
+.toggle-btn { flex: 1; background: var(--bg); border: 1.5px solid var(--border); border-radius: 9px; padding: 11px; font-family: 'Barlow', sans-serif; font-size: 14px; font-weight: 600; cursor: pointer; transition: all .15s; color: var(--muted); }
+.toggle-btn.active-yes { background: #eaf7ef; color: var(--green); border-color: var(--green); }
+.toggle-btn.active-no  { background: #fdf0f2; color: var(--red);   border-color: var(--red); }
+.upload-area { border: 2px dashed var(--border); border-radius: 10px; padding: 20px; text-align: center; cursor: pointer; transition: all .15s; background: var(--bg); }
+.upload-area:hover { border-color: var(--blue); }
+.upload-area.has-file { border-color: var(--green); background: #eaf7ef; }
+#doc-input { display: none; }
+.form-divider { height: 1px; background: var(--border); grid-column: 1/-1; }
+.btn-submit { width: 100%; background: var(--blue); color: white; border: none; border-radius: 10px; padding: 16px; font-family: 'Barlow', sans-serif; font-size: 16px; font-weight: 700; cursor: pointer; transition: all .2s; text-transform: uppercase; letter-spacing: .06em; }
+.btn-submit:hover { background: #0f2540; transform: translateY(-1px); }
+.btn-submit:disabled { opacity: .6; cursor: not-allowed; transform: none; }
+
+/* OVERVIEW */
+.ov-page { max-width: 1100px; margin: 0 auto; padding: 40px 24px 80px; }
+.ov-toolbar { display: flex; align-items: center; gap: 14px; margin-bottom: 24px; flex-wrap: wrap; }
+.ov-search-wrap { flex: 1; min-width: 200px; position: relative; }
+.ov-search-wrap svg { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--dim); pointer-events: none; }
+#ov-search { width: 100%; background: var(--surface); border: 1.5px solid var(--border); border-radius: 10px; padding: 11px 14px 11px 42px; font-family: 'Barlow', sans-serif; font-size: 15px; color: var(--text); outline: none; }
+#ov-search:focus { border-color: var(--blue); }
+#ov-search::placeholder { color: var(--dim); }
+.btn-secondary { background: var(--bg); border: 1.5px solid var(--border); border-radius: 9px; padding: 10px 18px; font-family: 'Barlow', sans-serif; font-size: 13px; font-weight: 600; color: var(--muted); cursor: pointer; transition: all .15s; }
+.btn-secondary:hover { border-color: var(--blue); color: var(--blue); }
+.btn-export { background: var(--blue); border: none; border-radius: 9px; padding: 10px 18px; font-family: 'Barlow', sans-serif; font-size: 13px; font-weight: 600; color: white; cursor: pointer; display: flex; align-items: center; gap: 7px; transition: all .15s; }
+.btn-export:hover { background: #0f2540; }
+.ov-table-wrap { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; box-shadow: var(--shadow); }
+.ov-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.ov-table thead tr { background: var(--blue); }
+.ov-table th { padding: 13px 16px; text-align: left; font-family: 'Barlow Condensed', sans-serif; font-size: 13px; font-weight: 700; color: rgba(255,255,255,0.8); text-transform: uppercase; letter-spacing: .08em; white-space: nowrap; }
+.ov-table tbody tr { border-bottom: 1px solid var(--border); transition: background .1s; }
+.ov-table tbody tr:last-child { border-bottom: none; }
+.ov-table tbody tr:hover { background: #f5f7fc; }
+.ov-table tbody tr:nth-child(even) { background: #fafbfd; }
+.ov-table td { padding: 13px 16px; vertical-align: middle; }
+.td-name { font-weight: 700; color: var(--blue); }
+.td-date { font-family: 'Barlow Condensed', sans-serif; font-size: 14px; color: var(--muted); }
+.pill { display: inline-flex; align-items: center; gap: 4px; font-size: 11px; font-weight: 700; border-radius: 5px; padding: 3px 9px; border: 1.5px solid; }
+.pill.yes { background: #eaf7ef; color: var(--green); border-color: #a8dfc0; }
+.pill.no  { background: #fdf0f2; color: var(--red);   border-color: #f5b3be; }
+.empty-ov { text-align: center; padding: 60px 20px; color: var(--dim); font-size: 15px; }
+mark { background: rgba(200,16,46,0.12); color: var(--red); border-radius: 2px; padding: 0 2px; }
+
+.toast { position: fixed; bottom: 32px; left: 50%; transform: translateX(-50%) translateY(80px); color: white; padding: 14px 28px; border-radius: 12px; font-size: 15px; font-weight: 600; box-shadow: 0 8px 32px rgba(0,0,0,0.2); transition: transform .3s cubic-bezier(.34,1.56,.64,1); z-index: 999; white-space: nowrap; }
+.toast.show { transform: translateX(-50%) translateY(0); }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="logo">Orkla <span>Kumla</span></div>
+  <nav class="nav">
+    <button class="nav-btn active" onclick="showPage('kiosk',this)">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>Sök
+    </button>
+    <button class="nav-btn" onclick="showPage('reg',this)">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Registrera
+    </button>
+    <button class="nav-btn" onclick="showPage('ov',this)">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>Översikt
+    </button>
+  </nav>
+  <div class="topbar-right">
+    <div class="sync-indicator">
+      <div class="sync-dot" id="sync-dot"></div>
+      <span id="sync-text">Ansluter…</span>
+    </div>
+    <span class="db-count" id="db-count">— registrerade</span>
+    <div class="clock" id="clock"></div>
+  </div>
+</div>
+
+<!-- KIOSK PAGE -->
+<div class="page active" id="page-kiosk">
+  <div class="kiosk">
+    <div class="kiosk-welcome">
+      <h1>Välkommen till Orkla Kumla</h1>
+      <p>Skriv ditt namn nedan för att kontrollera ditt körtillstånd</p>
+    </div>
+    <div class="kiosk-search">
+      <div class="search-box">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#b0b8cc" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input id="k-input" type="text" placeholder="Skriv ditt namn här…" autocomplete="off" spellcheck="false" onkeydown="if(event.key==='Enter')kioskSearch()">
+        <button class="btn-primary" onclick="kioskSearch()">Sök</button>
+      </div>
+    </div>
+    <div class="kiosk-result" id="kiosk-result">
+      <div class="idle-hint"><div class="big">👇</div><p>Skriv ditt namn och tryck Sök</p></div>
+    </div>
+  </div>
+</div>
+
+<!-- REGISTER PAGE -->
+<div class="page" id="page-reg">
+  <div class="reg-page">
+    <div class="page-title">Registrera chaufför</div>
+    <div class="page-sub">Fyll i uppgifterna nedan för att lägga till ett nytt körtillstånd.</div>
+    <div class="form-card">
+      <div class="form-grid">
+        <div class="form-group full">
+          <label>Namn chaufför *</label>
+          <input type="text" id="r-name" placeholder="För- och efternamn">
+        </div>
+        <div class="form-group">
+          <label>Datum *</label>
+          <input type="date" id="r-date">
+        </div>
+        <div class="form-group">
+          <label>Inregistrerad av *</label>
+          <input type="text" id="r-by" placeholder="Ditt namn">
+        </div>
+        <div class="form-divider"></div>
+        <div class="form-group">
+          <label>Utbildningsbevis sparat?</label>
+          <div class="toggle-group">
+            <button class="toggle-btn active-yes" id="bev-ja" onclick="setToggle('bev','ja')">✓ Ja</button>
+            <button class="toggle-btn" id="bev-nej" onclick="setToggle('bev','nej')">✗ Nej</button>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Regler delgivna?</label>
+          <div class="toggle-group">
+            <button class="toggle-btn active-yes" id="regl-ja" onclick="setToggle('regl','ja')">✓ Ja</button>
+            <button class="toggle-btn" id="regl-nej" onclick="setToggle('regl','nej')">✗ Nej</button>
+          </div>
+        </div>
+        <div class="form-group full">
+          <label>Körtillstånd godkänt?</label>
+          <div class="toggle-group">
+            <button class="toggle-btn active-yes" id="kort-ja" onclick="setToggle('kort','ja')">✓ Ja</button>
+            <button class="toggle-btn" id="kort-nej" onclick="setToggle('kort','nej')">✗ Nej</button>
+          </div>
+        </div>
+        <div class="form-group full">
+          <label>Ladda upp dokument (valfritt)</label>
+          <div class="upload-area" id="upload-area" onclick="document.getElementById('doc-input').click()">
+            <div style="font-size:28px">📄</div>
+            <div style="font-size:13px;color:var(--muted);margin-top:6px;">Klicka för att ladda upp<br><b style="color:var(--blue)">Utbildningsbevis / Körtillstånd</b></div>
+          </div>
+          <input type="file" id="doc-input" accept=".pdf,.jpg,.jpeg,.png" onchange="handleDocUpload(this)">
+          <div id="doc-name" style="font-size:12px;color:var(--muted);margin-top:6px;"></div>
+        </div>
+        <div class="form-group full">
+          <button class="btn-submit" id="btn-submit" onclick="registerDriver()">Spara körtillstånd</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- OVERVIEW PAGE -->
+<div class="page" id="page-ov">
+  <div class="ov-page">
+    <div style="display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:24px;flex-wrap:wrap;gap:12px;">
+      <div>
+        <div class="page-title">Översikt</div>
+        <div class="page-sub">Alla registrerade chaufförer — sparas i Google Sheets</div>
+      </div>
+      <div style="display:flex;gap:10px;">
+        <button class="btn-export" onclick="exportCSV()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Exportera CSV
+        </button>
+        <button class="btn-secondary" onclick="loadFromSheets()">↻ Uppdatera</button>
+      </div>
+    </div>
+    <div class="ov-toolbar">
+      <div class="ov-search-wrap">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input type="text" id="ov-search" placeholder="Filtrera på namn…" oninput="renderOverview(this.value)">
+      </div>
+      <span id="ov-count" style="font-size:13px;color:var(--muted);white-space:nowrap;"></span>
+    </div>
+    <div class="ov-table-wrap">
+      <table class="ov-table">
+        <thead><tr>
+          <th>Namn chaufför</th><th>Datum</th><th>Inregistrerad av</th>
+          <th>Utbildningsbevis</th><th>Regler delgivna</th><th>Körtillstånd</th><th>Dokument</th>
+        </tr></thead>
+        <tbody id="ov-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ── CONFIG ────────────────────────────────────────────────────────────────
+const SHEET_ID = '1cWH43z9yiZ0OIlK3Q53gpIak9UriWzsft9TNrq_6bN8';
+const CLIENT_EMAIL = 'kortillstand-app@kortillstand.iam.gserviceaccount.com';
+const PRIVATE_KEY = `-----BEGIN PRIVATE KEY-----
+MIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQC6ZrX1XB7MbCxh
+4R2H+twbtHSs9RreO2sgjpWPKDaMOSN/eQyy+RdU4cg0sJL0z4a/1a4O6C2OYcGV
+WtgMeDgx6idrYcb1jLNjDs1A95FWRrSD1iCbFGNLDUnXIKkCufAqAF/2CbWPmT/y
+9b0C9SgXtimT5LOftE3BIJS6ZhPuknLCuZdUb9c1bs4FA90JxZGENgGDysdfIyFp
+nR/5/w3p1D1wgX/vhA+jWmnaOVqpHeBMTORlptYoKVO1kWk+j1xVUVKFNkH21uyq
+SQezwgBD9qui6nc5T3udiuc6K/x3L4WRSNVtAVqe1VZzTn6mZpCpo1WF2HQ5F0C2
+7P3+BPjXAgMBAAECggEALhlYxuWReF0IXOyfsRGJfhCTCnNTwcJQLC0XL+ByHRvE
+e7IkQd74tjVgnidNMN5iJO9jrKwfGCd1CMr+w5a3zyBpv1TfL7ssYkM23+paN0wl
+OLWsOq5AID+ZE2swYUw66ShOkzqzfGAaQKwloqWe1L5oafsVsVmWIT09ixvTshx5
+rbJLZiMlvO4v+/FKz53SX1/+x7NEcLm8us3pHo5iSQ9IG+FJuBlrNdB4PCRUxKWQ
+9y/NcVpi4uXY3qGW/6/SgBNXLQy7EvfhmhL+jLR0HGzuPMloG2Exylf5eKQv52Yt
+6n0UbQzcDf7Zu7BuZWcEPaodix34PnTeFBkliMLdgQKBgQDm85McuXV6nZ6Nhdkf
+PMdEKW1nLcyMJR0Wal2fn41OL+nVYYOEcf3JiiV3obRTLTl9PX4vKjn101k+t4/p
+Y+RDen9jvUDRvbDzTaI+Pe9meab4bzS1fu3HQPHeEl3G13mXYoBz7uCToNqvmCOn
+GN73fu5NoyIodD6mnKhAQXSnfQKBgQDOni/wPL0EZPSxDClfBLT7xaT/zkDBm5mr
+JX4c1uoHIH4542Bz4xD2QLLUM4UDzdx20iTPfwd4ginc0Z2WlA2fDEKHaiPPP6wX
+6NXojIUBIv9ryHAu00DldXZahRgeslDCtIxAetKLbsU099D4D5eepxGZnozMNFbC
+5pnA/eJZ4wKBgCeINfxKupM8e7FZ4ep46tr+BF4O9t5eU/ZMSq5SD0v845fE01BO
+etSOsw8hPM6oBRks93Z3UeiEPth/b0DR+naad0fJU1kTkUB0X3sr+tidpjkMQAd5
+LJZYxY3vsuGgbI2/LKGrmAFtHUHFVwT5OuE+dugPLn+iNj8qvZoSGje5AoGBAI6g
+tAbqZrB54E+3TXfCEA0cymGrRxhfCR0TrJLL6JEy5O+g/hwBStwynT/OsKuHmACN
+38s8rTOK5ssACADCAwUfuW0w37dZBLsch00Yc1ftiNQmcQph2hKLmz+xUI0gGo/N
+gmOgZWbK+GcwCpiyar+iJIwe3qK4How8EzceCvpxAoGAStIQbCsHC/MVkJRVltOW
+7lwZrl+dCuMMFfiPkbnkj4+/yv54B1Ho6Z6zQ1LI98N3H37mAH/DFpTu7G+sGVTG
+8ziuBELF3hOkphDiR9u3gXYDD+ab0l1O2HeUr/pfLK/YyDuRWN4UT/0FWXNl8YOQ
+fzEjmBCDi4Gr6ycml/NNwe8=
+-----END PRIVATE KEY-----`;
+const HEADERS = ['Namn chaufför','Datum','Inregistrerad av','Utbildningsbevis','Regler delgivna','Körtillstånd','Dokument','Tidsstämpel'];
+
+// ── State ─────────────────────────────────────────────────────────────────
+let db = [];
+let toggleState = { bev:'ja', regl:'ja', kort:'ja' };
+let docData = null;
+let accessToken = null;
+let tokenExpiry = 0;
+
+// ── Clock ─────────────────────────────────────────────────────────────────
+function tick() {
+  document.getElementById('clock').textContent =
+    new Date().toLocaleTimeString('sv-SE',{hour:'2-digit',minute:'2-digit'});
+}
+tick(); setInterval(tick,1000);
+
+// ── Nav ───────────────────────────────────────────────────────────────────
+function showPage(id, btn) {
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('page-'+id).classList.add('active');
+  btn.classList.add('active');
+  if(id==='ov') loadFromSheets();
+  if(id==='kiosk') resetKiosk();
+}
+
+// ── JWT Auth ──────────────────────────────────────────────────────────────
+async function getAccessToken() {
+  if (accessToken && Date.now() < tokenExpiry - 60000) return accessToken;
+  setSyncStatus('syncing','Autentiserar…');
+  const now = Math.floor(Date.now()/1000);
+  const header = btoa(JSON.stringify({alg:'RS256',typ:'JWT'})).replace(/=/g,'').replace(/\+/g,'-').replace(/\//g,'_');
+  const payload = btoa(unescape(encodeURIComponent(JSON.stringify({
+    iss: CLIENT_EMAIL,
+    scope: 'https://www.googleapis.com/auth/spreadsheets',
+    aud: 'https://oauth2.googleapis.com/token',
+    exp: now+3600, iat: now
+  })))).replace(/=/g,'').replace(/\+/g,'-').replace(/\//g,'_');
+  const unsigned = `${header}.${payload}`;
+  const sig = await signRS256(unsigned, PRIVATE_KEY);
+  const jwt = `${unsigned}.${sig}`;
+  const r = await fetch('https://oauth2.googleapis.com/token',{
+    method:'POST', headers:{'Content-Type':'application/x-www-form-urlencoded'},
+    body:`grant_type=urn%3Aietf%3Aparams%3Aoauth%3Agrant-type%3Ajwt-bearer&assertion=${jwt}`
+  });
+  const d = await r.json();
+  if (!d.access_token) throw new Error(JSON.stringify(d));
+  accessToken = d.access_token;
+  tokenExpiry = Date.now() + d.expires_in*1000;
+  setSyncStatus('ok','Ansluten');
+  return accessToken;
+}
+
+async function signRS256(data, pem) {
+  const b64 = pem.replace(/-----BEGIN PRIVATE KEY-----|-----END PRIVATE KEY-----|\n/g,'');
+  const bin = Uint8Array.from(atob(b64),c=>c.charCodeAt(0));
+  const key = await crypto.subtle.importKey('pkcs8',bin.buffer,{name:'RSASSA-PKCS1-v1_5',hash:'SHA-256'},false,['sign']);
+  const sig = await crypto.subtle.sign('RSASSA-PKCS1-v1_5',key,new TextEncoder().encode(data));
+  return btoa(String.fromCharCode(...new Uint8Array(sig))).replace(/=/g,'').replace(/\+/g,'-').replace(/\//g,'_');
+}
+
+// ── Sheets API ────────────────────────────────────────────────────────────
+async function ensureHeaders(token) {
+  const r = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/Sheet1!A1:H1`,
+    {headers:{Authorization:`Bearer ${token}`}});
+  const d = await r.json();
+  if (!d.values || !d.values.length) {
+    await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/Sheet1!A1:H1?valueInputOption=RAW`,{
+      method:'PUT', headers:{Authorization:`Bearer ${token}`,'Content-Type':'application/json'},
+      body:JSON.stringify({values:[HEADERS]})
+    });
+  }
+}
+
+async function appendRow(row) {
+  const token = await getAccessToken();
+  await ensureHeaders(token);
+  const r = await fetch(
+    `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/Sheet1!A:H:append?valueInputOption=RAW&insertDataOption=INSERT_ROWS`,
+    {method:'POST', headers:{Authorization:`Bearer ${token}`,'Content-Type':'application/json'},
+     body:JSON.stringify({values:[row]})}
+  );
+  return r.ok;
+}
+
+async function loadFromSheets() {
+  setSyncStatus('syncing','Hämtar…');
+  try {
+    const token = await getAccessToken();
+    const r = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/Sheet1!A:H`,
+      {headers:{Authorization:`Bearer ${token}`}});
+    const d = await r.json();
+    const rows = d.values || [];
+    db = rows.length <= 1 ? [] : rows.slice(1).map((r,i)=>({
+      id:i, name:r[0]||'', date:r[1]||'', by:r[2]||'',
+      bev:r[3]||'nej', regl:r[4]||'nej', kort:r[5]||'nej',
+      doc:r[6]||null, created:r[7]||''
+    }));
+    setSyncStatus('ok','Synkad');
+    document.getElementById('db-count').textContent = `${db.length} registrerade`;
+    if(document.getElementById('page-ov').classList.contains('active'))
+      renderOverview(document.getElementById('ov-search').value);
+  } catch(e) {
+    setSyncStatus('error','Anslutningsfel');
+  }
+}
+
+function setSyncStatus(state, text) {
+  const dot = document.getElementById('sync-dot');
+  dot.className = 'sync-dot' + (state==='syncing'?' syncing':state==='error'?' error':'');
+  document.getElementById('sync-text').textContent = text;
+}
+
+// ── Kiosk ─────────────────────────────────────────────────────────────────
+function kioskSearch() {
+  const query = document.getElementById('k-input').value.trim();
+  if (!query) return;
+  const lower = query.toLowerCase();
+  let m = db.find(r=>r.name.toLowerCase()===lower) || db.find(r=>r.name.toLowerCase().includes(lower));
+  const area = document.getElementById('kiosk-result');
+  if (m) {
+    area.innerHTML = `<div class="result-card">
+      <div class="rc-header green"><div class="rc-icon">✅</div><div>
+        <div class="rc-title">Körtillstånd godkänt</div>
+        <div class="rc-subtitle">${esc(m.name)}</div>
+      </div></div>
+      <div class="rc-body">
+        <div class="info-grid">
+          <div class="info-tile"><div class="info-tile-label">Datum</div><div class="info-tile-value">${esc(m.date)}</div></div>
+          <div class="info-tile"><div class="info-tile-label">Inregistrerad av</div><div class="info-tile-value">${esc(m.by)}</div></div>
+          <div class="info-tile"><div class="info-tile-label">Dokument</div><div class="info-tile-value">${m.doc?`<a href="${m.doc}" target="_blank" style="color:var(--blue);text-decoration:underline">Öppna</a>`:'—'}</div></div>
+        </div>
+        <div class="checks">
+          <div class="chk ${m.bev==='ja'?'yes':'no'}">${m.bev==='ja'?'✓':'✗'} Utbildningsbevis</div>
+          <div class="chk ${m.regl==='ja'?'yes':'no'}">${m.regl==='ja'?'✓':'✗'} Regler delgivna</div>
+          <div class="chk ${m.kort==='ja'?'yes':'no'}">${m.kort==='ja'?'✓':'✗'} Körtillstånd utfärdat</div>
+        </div>
+        <button class="btn-reset" onclick="resetKiosk()">Ny sökning</button>
+      </div></div>`;
+  } else {
+    area.innerHTML = `<div class="result-card">
+      <div class="rc-header red"><div class="rc-icon">❌</div><div>
+        <div class="rc-title">Du saknar körtillstånd</div>
+        <div class="rc-subtitle">${esc(query)}</div>
+      </div></div>
+      <div class="rc-body not-found-msg">
+        <p>Vi har inget registrerat körtillstånd för <strong>${esc(query)}</strong>.</p>
+        <p>Vänligen kontakta personal för att utfärda ett körtillstånd.</p>
+        <button class="btn-reset" onclick="resetKiosk()">Försök igen</button>
+      </div></div>`;
+  }
+}
+
+function resetKiosk() {
+  document.getElementById('k-input').value='';
+  document.getElementById('kiosk-result').innerHTML=
+    `<div class="idle-hint"><div class="big">👇</div><p>Skriv ditt namn och tryck Sök</p></div>`;
+  document.getElementById('k-input').focus();
+}
+
+// ── Form ──────────────────────────────────────────────────────────────────
+function setToggle(field,val) {
+  toggleState[field]=val;
+  document.getElementById(`${field}-ja`).className='toggle-btn'+(val==='ja'?' active-yes':'');
+  document.getElementById(`${field}-nej`).className='toggle-btn'+(val==='nej'?' active-no':'');
+}
+
+function handleDocUpload(input) {
+  const file=input.files[0]; if(!file) return;
+  const reader=new FileReader();
+  reader.onload=e=>{
+    docData=e.target.result;
+    document.getElementById('upload-area').classList.add('has-file');
+    document.getElementById('doc-name').textContent='📎 '+file.name;
+  };
+  reader.readAsDataURL(file);
+}
+
+async function registerDriver() {
+  const name=document.getElementById('r-name').value.trim();
+  const date=document.getElementById('r-date').value;
+  const by=document.getElementById('r-by').value.trim();
+  if(!name||!date||!by){showToast('⚠ Fyll i namn, datum och inregistrerad av','var(--red)');return;}
+  const btn=document.getElementById('btn-submit');
+  btn.disabled=true; btn.textContent='Sparar…';
+  try {
+    const ok = await appendRow([name,date,by,toggleState.bev,toggleState.regl,toggleState.kort,docData||'',new Date().toISOString()]);
+    if(!ok) throw new Error();
+    db.push({id:Date.now(),name,date,by,bev:toggleState.bev,regl:toggleState.regl,kort:toggleState.kort,doc:docData||null,created:new Date().toISOString()});
+    document.getElementById('db-count').textContent=`${db.length} registrerade`;
+    document.getElementById('r-name').value='';
+    document.getElementById('r-date').valueAsDate=new Date();
+    document.getElementById('r-by').value='';
+    setToggle('bev','ja');setToggle('regl','ja');setToggle('kort','ja');
+    docData=null;
+    document.getElementById('upload-area').classList.remove('has-file');
+    document.getElementById('doc-name').textContent='';
+    document.getElementById('doc-input').value='';
+    showToast(`✓ ${name} sparad i Google Sheets!`);
+  } catch(e) {
+    showToast('Kunde inte spara — kontrollera anslutningen','var(--red)');
+  }
+  btn.disabled=false; btn.textContent='Spara körtillstånd';
+}
+
+// ── Overview ──────────────────────────────────────────────────────────────
+function renderOverview(query) {
+  const lower=(query||'').toLowerCase();
+  const rows=lower?db.filter(r=>r.name.toLowerCase().includes(lower)):[...db];
+  rows.sort((a,b)=>new Date(b.created||0)-new Date(a.created||0));
+  document.getElementById('ov-count').textContent=query?`${rows.length} av ${db.length} träffar`:`${db.length} registrerade`;
+  const tbody=document.getElementById('ov-tbody');
+  if(!rows.length){
+    tbody.innerHTML=`<tr><td colspan="7"><div class="empty-ov">${db.length===0?'Inga chaufförer registrerade ännu.':'Ingen träff på "'+esc(query)+'"'}</div></td></tr>`;
+    return;
+  }
+  tbody.innerHTML=rows.map(r=>`<tr>
+    <td class="td-name">${hl(esc(r.name),lower)}</td>
+    <td class="td-date">${esc(r.date)}</td>
+    <td style="color:var(--muted)">${esc(r.by)}</td>
+    <td>${pill(r.bev)}</td><td>${pill(r.regl)}</td><td>${pill(r.kort)}</td>
+    <td>${r.doc?`<a href="${r.doc}" target="_blank" style="color:var(--blue);font-size:12px;font-weight:600;text-decoration:underline">Öppna</a>`:'<span style="color:var(--dim)">—</span>'}</td>
+  </tr>`).join('');
+}
+
+function exportCSV() {
+  const headers=['Namn chaufför','Datum','Inregistrerad av','Utbildningsbevis','Regler delgivna','Körtillstånd'];
+  const rows=db.map(r=>[r.name,r.date,r.by,r.bev,r.regl,r.kort]);
+  const csv=[headers,...rows].map(r=>r.map(v=>`"${v}"`).join(',')).join('\n');
+  const a=document.createElement('a');
+  a.href='data:text/csv;charset=utf-8,'+encodeURIComponent('\uFEFF'+csv);
+  a.download=`kortillstand_${new Date().toISOString().slice(0,10)}.csv`;
+  a.click();
+}
+
+// ── Helpers ───────────────────────────────────────────────────────────────
+function pill(v){return v==='ja'?'<span class="pill yes">✓ Ja</span>':'<span class="pill no">✗ Nej</span>';}
+function hl(text,q){if(!q)return text;return text.replace(new RegExp(`(${q.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')})`, 'gi'),'<mark>$1</mark>');}
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function showToast(msg,bg='var(--green)'){
+  const t=document.getElementById('toast');
+  t.textContent=msg;t.style.background=bg;
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),3500);
+}
+
+// ── Init ──────────────────────────────────────────────────────────────────
+document.getElementById('r-date').valueAsDate=new Date();
+loadFromSheets();
+setInterval(loadFromSheets, 60000);
+document.getElementById('k-input').focus();
+</script>
+</body>
+</html>
