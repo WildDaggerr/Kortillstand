@@ -210,6 +210,11 @@ mark { background:rgba(200,16,46,0.12); color:var(--red); border-radius:2px; pad
     <button class="nav-btn" onclick="showPage('ov',this)">
       <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>Översikt
     </button>
+    <button class="nav-btn" onclick="showPage('notapproved',this)">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+      Ej godkända
+      <span class="nav-badge" id="notapproved-badge" style="display:none;background:#c8102e;color:white">0</span>
+    </button>
   </nav>
   <div class="topbar-right">
     <div class="sync-wrap">
@@ -266,13 +271,7 @@ mark { background:rgba(200,16,46,0.12); color:var(--red); border-radius:2px; pad
           </div>
         </div>
         <div class="form-divider"></div>
-        <div class="form-group">
-          <label>Utbildningsbevis sparat?</label>
-          <div class="toggle-group">
-            <button class="toggle-btn active-yes" id="bev-ja"  onclick="setToggle('bev','ja')">✓ Ja</button>
-            <button class="toggle-btn"            id="bev-nej" onclick="setToggle('bev','nej')">✗ Nej</button>
-          </div>
-        </div>
+
 
         <div class="form-group full">
           <label>Körtillstånd godkänt?</label>
@@ -315,6 +314,28 @@ mark { background:rgba(200,16,46,0.12); color:var(--red); border-radius:2px; pad
           </tr>
         </thead>
         <tbody id="warn-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- EJ GODKÄNDA -->
+<div class="page" id="page-notapproved">
+  <div class="ov-page">
+    <div class="ov-header">
+      <div>
+        <div class="page-title">Ej godkända</div>
+        <div class="page-sub">Chaufförer som saknar dokument eller har icke-godkänt svar</div>
+      </div>
+    </div>
+    <div class="ov-table-wrap">
+      <table class="ov-table">
+        <thead>
+          <tr>
+            <th>Namn chaufför</th><th>Registrerad</th><th>Inregistrerad av</th><th>Körtillstånd</th><th>Dokument</th><th></th>
+          </tr>
+        </thead>
+        <tbody id="notapproved-tbody"></tbody>
       </table>
     </div>
   </div>
@@ -418,7 +439,22 @@ mark { background:rgba(200,16,46,0.12); color:var(--red); border-radius:2px; pad
 <div class="toast" id="toast"></div>
 
 <script>
-// ── CONFIG — byt ut mot Power Automate webhook-URL när IT satt upp ──
+// ╔══════════════════════════════════════════════════════════════╗
+// ║                                                              ║
+// ║   ██╗    ██╗██████╗                                         ║
+// ║   ██║    ██║██╔══██╗                                        ║
+// ║   ██║ █╗ ██║██║  ██║                                        ║
+// ║   ██║███╗██║██║  ██║                                        ║
+// ║   ╚███╔███╔╝██████╔╝                                        ║
+// ║    ╚══╝╚══╝ ╚═════╝                                         ║
+// ║                                                              ║
+// ║   Körtillstånd App — Orkla Kumla                            ║
+// ║   Built by WildDaggerr                                      ║
+// ║   v1.0 pre-patch                                            ║
+// ║                                                              ║
+// ╚══════════════════════════════════════════════════════════════╝
+
+// ── CONFIG ──────────────────────────────────────────────────────
 const PA_WRITE_URL = 'https://a2abda53c55aef0997be14a2c7a027.5c.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/6f2956fd047649228804053fd9fdd371/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=Gq2uS6nsElHF0s5diQdWs9bIuSMUmEI8t5iCMIgCvI0';
 const PA_READ_URL  = 'https://a2abda53c55aef0997be14a2c7a027.5c.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/7e2efb813e6a47ddaa9d6b0d69ebaf33/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=XBCoUO_UhustWEa1y2k8WPMzXC_dxmPzqg0YVAZHHu0';
 // ─────────────────────────────────────────────────────────────────────
@@ -462,7 +498,7 @@ function getStatus(r) {
 
   // Check approval (not expired, but missing docs/answers)
   if (typeof r === 'object') {
-    if (!r.doc || r.kort !== 'ja' || r.bev !== 'ja') return 'not-approved';
+    if (!r.doc || r.kort !== 'ja') return 'not-approved';
   }
 
   return 'green';
@@ -489,6 +525,7 @@ function getExpiry(r) {
 }
 
 // ── Clock ─────────────────────────────────────────────────────────────
+// Uppdaterar klockan i topbaren varje sekund
 function tick() {
   document.getElementById('clock').textContent =
     new Date().toLocaleTimeString('sv-SE', {hour:'2-digit',minute:'2-digit'});
@@ -496,6 +533,7 @@ function tick() {
 tick(); setInterval(tick, 1000);
 
 // ── Navigation ────────────────────────────────────────────────────────
+// Hanterar navigering mellan flikar
 function showPage(id, btn) {
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
@@ -503,10 +541,12 @@ function showPage(id, btn) {
   btn.classList.add('active');
   if (id === 'ov')   { loadData(); }
   if (id === 'warn') { renderWarn(); }
+  if (id === 'notapproved') { renderNotApproved(); }
   if (id === 'kiosk') resetKiosk();
 }
 
 // ── Load data ─────────────────────────────────────────────────────────
+// Hämtar alla chaufförer från SharePoint via Power Automate
 async function loadData() {
   setSyncStatus('syncing','Hämtar…');
   try {
@@ -546,13 +586,23 @@ function setSyncStatus(state, text) {
 }
 
 function updateWarnBadge() {
-  const count = db.filter(r => getStatus(r) !== 'green').length;
-  const badge = document.getElementById('warn-badge');
-  if (count > 0) { badge.textContent = count; badge.style.display = 'inline'; }
-  else { badge.style.display = 'none'; }
+  // Warn badge = only expiring soon (yellow)
+  const warnCount = db.filter(r => getStatus(r) === 'yellow').length;
+  const warnBadge = document.getElementById('warn-badge');
+  if (warnCount > 0) { warnBadge.textContent = warnCount; warnBadge.style.display = 'inline'; }
+  else { warnBadge.style.display = 'none'; }
+
+  // Not-approved badge
+  const naCount = db.filter(r => getStatus(r) === 'not-approved').length;
+  const naBadge = document.getElementById('notapproved-badge');
+  if (naBadge) {
+    if (naCount > 0) { naBadge.textContent = naCount; naBadge.style.display = 'inline'; }
+    else { naBadge.style.display = 'none'; }
+  }
 }
 
 // ── Kiosk ─────────────────────────────────────────────────────────────
+// Söker efter chaufför och visar status (grön/gul/röd)
 function kioskSearch() {
   const query = document.getElementById('k-input').value.trim();
   if (!query) return;
@@ -602,6 +652,7 @@ function kioskSearch() {
   }
 }
 
+// Visar detaljkort för en specifik chaufför
 function showDriverResult(match) {
   const area = document.getElementById('kiosk-result');
   const status = getStatus(match);
@@ -652,6 +703,7 @@ function showDriverResult(match) {
     </div>`;
 }
 
+// Återställer söksidan till startläge
 function resetKiosk() {
   document.getElementById('k-input').value = '';
   document.getElementById('kiosk-result').innerHTML =
@@ -660,15 +712,14 @@ function resetKiosk() {
 }
 
 // ── Utgår snart ───────────────────────────────────────────────────────
+// Renderar fliken för chaufförer som snart går ut
 function renderWarn() {
-  const expiring = db.filter(r => getStatus(r) !== 'green')
+  // Only show expiring soon (yellow) - not-approved goes to separate tab
+  const expiring = db.filter(r => getStatus(r) === 'yellow')
     .sort((a,b) => getDaysLeft(a.date) - getDaysLeft(b.date));
 
-  const red    = expiring.filter(r => getStatus(r) === 'red').length;
-  const yellow = expiring.filter(r => getStatus(r) === 'yellow').length;
-
   document.getElementById('warn-banner-text').textContent =
-    `${red} utgångna körtillstånd · ${yellow} utgår inom 30 dagar`;
+    `${expiring.length} chaufförer utgår inom 30 dagar`;
 
   const tbody = document.getElementById('warn-tbody');
   if (!expiring.length) {
@@ -720,6 +771,7 @@ function handleDocUpload(input) {
 }
 
 // ── Register ──────────────────────────────────────────────────────────
+// Registrerar ny chaufför och sparar till SharePoint
 async function registerDriver() {
   const name = document.getElementById('r-name').value.trim();
   const date = document.getElementById('r-date').value;
@@ -734,7 +786,7 @@ async function registerDriver() {
     const writeRes = await fetch(PA_WRITE_URL, {
       method: 'POST',
       headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({ action:'write', row:[name, date, by, toggleState.bev, 'ja', toggleState.kort, docData||'', new Date().toISOString(), validityMode] })
+      body: JSON.stringify({ action:'write', row:[name, date, by, 'ja', 'ja', toggleState.kort, docData||'', new Date().toISOString(), validityMode] })
     });
     if (!writeRes.ok) throw new Error('HTTP ' + writeRes.status);
     
@@ -758,6 +810,7 @@ async function registerDriver() {
 }
 
 // ── Overview ──────────────────────────────────────────────────────────
+// Renderar översiktstabellen med alla chaufförer
 function renderOverview(query) {
   const lower = (query||'').toLowerCase();
   const rows  = lower ? db.filter(r => r.name.toLowerCase().includes(lower)) : [...db];
@@ -877,6 +930,33 @@ async function saveDriver() {
     showToast('⚠ Fel: ' + e.message, '#c8102e');
   }
   btn.disabled = false; txt.textContent = 'Spara ändringar';
+}
+
+// ── Render "Ej godkända" tab ──────────────────────────────────────────
+// Renderar fliken för ej godkända chaufförer
+function renderNotApproved() {
+  // Filter only not-approved (missing doc or kort=nej), exclude expired
+  const rows = db.filter(r => getStatus(r) === 'not-approved');
+  const badge = document.getElementById('notapproved-badge');
+  badge.textContent = rows.length;
+  badge.style.display = rows.length > 0 ? 'inline' : 'none';
+
+  const tbody = document.getElementById('notapproved-tbody');
+  if (!rows.length) {
+    tbody.innerHTML = `<tr><td colspan="6"><div class="empty-ov">✅ Inga ej godkända chaufförer!</div></td></tr>`;
+    return;
+  }
+  tbody.innerHTML = rows.map(r => {
+    const rJson = encodeURIComponent(JSON.stringify(r));
+    return `<tr class="row-red" style="cursor:pointer" onclick="openDriverModal(JSON.parse(decodeURIComponent('${rJson}')))">
+      <td class="td-name">${esc(r.name)}</td>
+      <td style="color:var(--muted);font-size:13px">${esc(r.date)}</td>
+      <td style="color:var(--muted)">${esc(r.by)}</td>
+      <td>${pill(r.kort)}</td>
+      <td>${r.doc ? `<a href="${r.doc}" target="_blank" style="color:var(--blue);font-size:12px;font-weight:600;text-decoration:underline" onclick="event.stopPropagation()">Öppna</a>` : '<span style="color:var(--red);font-size:12px;font-weight:600">Saknas</span>'}</td>
+      <td><button onclick="event.stopPropagation();deleteDriver('${r.id}', '${esc(r.name)}')" style="background:none;border:none;cursor:pointer;color:var(--dim);padding:4px 8px;border-radius:6px;font-size:14px;" onmouseover="this.style.color='var(--red)';this.style.background='#fdf0f2'" onmouseout="this.style.color='var(--dim)';this.style.background='none'">✕</button></td>
+    </tr>`;
+  }).join('');
 }
 
 // ── Export CSV ────────────────────────────────────────────────────────
