@@ -440,31 +440,19 @@ mark { background:rgba(200,16,46,0.12); color:var(--red); border-radius:2px; pad
 
 <script>
 // ╔══════════════════════════════════════════════════════════════╗
-// ║                                                              ║
-// ║   ██╗    ██╗██████╗                                         ║
-// ║   ██║    ██║██╔══██╗                                        ║
-// ║   ██║ █╗ ██║██║  ██║                                        ║
-// ║   ██║███╗██║██║  ██║                                        ║
-// ║   ╚███╔███╔╝██████╔╝                                        ║
-// ║    ╚══╝╚══╝ ╚═════╝                                         ║
-// ║                                                              ║
 // ║   Körtillstånd App — Orkla Kumla                            ║
-// ║   Built by WildDaggerr                                      ║
-// ║   v1.0 pre-patch                                            ║
-// ║                                                              ║
+// ║   Built by WildDaggerr (Linus)                              ║
+// ║   v1.0 COMPLETE                                             ║
 // ╚══════════════════════════════════════════════════════════════╝
 
-// ── CONFIG ──────────────────────────────────────────────────────
 const PA_WRITE_URL = 'https://a2abda53c55aef0997be14a2c7a027.5c.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/6f2956fd047649228804053fd9fdd371/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=Gq2uS6nsElHF0s5diQdWs9bIuSMUmEI8t5iCMIgCvI0';
 const PA_READ_URL  = 'https://a2abda53c55aef0997be14a2c7a027.5c.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/7e2efb813e6a47ddaa9d6b0d69ebaf33/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=XBCoUO_UhustWEa1y2k8WPMzXC_dxmPzqg0YVAZHHu0';
-// ─────────────────────────────────────────────────────────────────────
 
 let db = [];
 let toggleState = { bev: 'ja', regl: 'ja', kort: 'ja' };
-let validityMode = 'year'; // 'year' or '24h'
+let validityMode = 'year';
 let docData = null;
 
-// ── Expiry helpers ────────────────────────────────────────────────────
 function getExpDate(dateStr, validity) {
   const reg = new Date(dateStr);
   const exp = new Date(reg);
@@ -481,13 +469,10 @@ function getStatus(r) {
   const dateStr = typeof r === 'string' ? r : r.date;
   const validity = typeof r === 'object' ? (r.validity || 'year') : 'year';
   if (!dateStr) return 'red';
-
-  // Check expiry first
   const now = new Date();
   const exp = getExpDate(dateStr, validity);
   const daysLeft = Math.floor((exp - now) / (1000 * 60 * 60 * 24));
   const hoursLeft = Math.floor((exp - now) / (1000 * 60 * 60));
-
   if (validity === '24h') {
     if (hoursLeft < 0) return 'expired';
     if (hoursLeft <= 4) return 'yellow';
@@ -495,24 +480,23 @@ function getStatus(r) {
     if (daysLeft < 0) return 'expired';
     if (daysLeft <= 30) return 'yellow';
   }
-
-  // Check approval (not expired, but missing docs/answers)
   if (typeof r === 'object') {
     if (!r.doc || r.kort !== 'ja') return 'not-approved';
   }
-
   return 'green';
 }
+
 function getDaysLeft(r) {
   const dateStr = typeof r === 'string' ? r : r.date;
   const validity = typeof r === 'object' ? (r.validity || 'year') : 'year';
   if (!dateStr) return null;
   const exp = getExpDate(dateStr, validity);
   if (validity === '24h') {
-    return Math.floor((exp - new Date()) / (1000 * 60 * 60)); // hours
+    return Math.floor((exp - new Date()) / (1000 * 60 * 60));
   }
   return Math.floor((exp - new Date()) / (1000 * 60 * 60 * 24));
 }
+
 function getExpiry(r) {
   const dateStr = typeof r === 'string' ? r : r.date;
   const validity = typeof r === 'object' ? (r.validity || 'year') : 'year';
@@ -524,16 +508,11 @@ function getExpiry(r) {
   return exp.toLocaleDateString('sv-SE');
 }
 
-// ── Clock ─────────────────────────────────────────────────────────────
-// Uppdaterar klockan i topbaren varje sekund
 function tick() {
-  document.getElementById('clock').textContent =
-    new Date().toLocaleTimeString('sv-SE', {hour:'2-digit',minute:'2-digit'});
+  document.getElementById('clock').textContent = new Date().toLocaleTimeString('sv-SE', {hour:'2-digit',minute:'2-digit'});
 }
 tick(); setInterval(tick, 1000);
 
-// ── Navigation ────────────────────────────────────────────────────────
-// Hanterar navigering mellan flikar
 function showPage(id, btn) {
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
@@ -545,8 +524,6 @@ function showPage(id, btn) {
   if (id === 'kiosk') resetKiosk();
 }
 
-// ── Load data ─────────────────────────────────────────────────────────
-// Hämtar alla chaufförer från SharePoint via Power Automate
 async function loadData() {
   setSyncStatus('syncing','Hämtar…');
   try {
@@ -568,7 +545,6 @@ async function loadData() {
       validity: r['Validity']||'year',
       created: r['Created']||''
     })).filter(r => r.name);
-
     document.getElementById('db-count').textContent = `${db.length} registrerade`;
     setSyncStatus('ok','Synkad');
     updateWarnBadge();
@@ -586,13 +562,10 @@ function setSyncStatus(state, text) {
 }
 
 function updateWarnBadge() {
-  // Warn badge = only expiring soon (yellow)
   const warnCount = db.filter(r => getStatus(r) === 'yellow').length;
   const warnBadge = document.getElementById('warn-badge');
   if (warnCount > 0) { warnBadge.textContent = warnCount; warnBadge.style.display = 'inline'; }
   else { warnBadge.style.display = 'none'; }
-
-  // Not-approved badge
   const naCount = db.filter(r => getStatus(r) === 'not-approved').length;
   const naBadge = document.getElementById('notapproved-badge');
   if (naBadge) {
@@ -601,15 +574,12 @@ function updateWarnBadge() {
   }
 }
 
-// ── Kiosk ─────────────────────────────────────────────────────────────
-// Söker efter chaufför och visar status (grön/gul/röd)
 function kioskSearch() {
   const query = document.getElementById('k-input').value.trim();
   if (!query) return;
   const lower = query.toLowerCase();
   const matches = db.filter(r => r.name.toLowerCase().includes(lower));
   const area = document.getElementById('kiosk-result');
-
   if (matches.length === 0) {
     area.innerHTML = `
       <div class="result-card">
@@ -652,13 +622,11 @@ function kioskSearch() {
   }
 }
 
-// Visar detaljkort för en specifik chaufför
 function showDriverResult(match) {
   const area = document.getElementById('kiosk-result');
   const status = getStatus(match);
   const days   = getDaysLeft(match);
   const expiry = getExpiry(match);
-
   let headerClass, icon, title, sub;
   if (status === 'green') {
     headerClass = 'green'; icon = '✅';
@@ -675,7 +643,6 @@ function showDriverResult(match) {
     headerClass = 'red'; icon = '❌';
     title = 'Ej godkänd för truckkörning'; sub = esc(match.name);
   }
-
   area.innerHTML = `
     <div class="result-card">
       <div class="rc-header ${headerClass}">
@@ -703,24 +670,32 @@ function showDriverResult(match) {
     </div>`;
 }
 
-// Återställer söksidan till startläge
 function resetKiosk() {
   document.getElementById('k-input').value = '';
-  document.getElementById('kiosk-result').innerHTML =
-    '<div class="idle-hint"><div class="big">👇</div><p>Skriv ditt namn och tryck Sök</p></div>';
+  document.getElementById('kiosk-result').innerHTML = '<div class="idle-hint"><div class="big">👇</div><p>Skriv ditt namn och tryck Sök</p></div>';
   document.getElementById('k-input').focus();
 }
 
-// ── Utgår snart ───────────────────────────────────────────────────────
-// Renderar fliken för chaufförer som snart går ut
+async function deleteDriver(id, name) {
+  if (!confirm(`Är du säker på att du vill ta bort ${name}?\n\nDetta kan inte ångras.`)) return;
+  try {
+    const res = await fetch(PA_WRITE_URL, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({ action: 'delete', id: id })
+    });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    await loadData();
+    resetKiosk();
+    showToast(`✓ ${name} har tagits bort`);
+  } catch(e) {
+    showToast('⚠ Fel vid borttagning: ' + e.message, '#c8102e');
+  }
+}
+
 function renderWarn() {
-  // Only show expiring soon (yellow) - not-approved goes to separate tab
-  const expiring = db.filter(r => getStatus(r) === 'yellow')
-    .sort((a,b) => getDaysLeft(a.date) - getDaysLeft(b.date));
-
-  document.getElementById('warn-banner-text').textContent =
-    `${expiring.length} chaufförer utgår inom 30 dagar`;
-
+  const expiring = db.filter(r => getStatus(r) === 'yellow').sort((a,b) => getDaysLeft(a.date) - getDaysLeft(b.date));
+  document.getElementById('warn-banner-text').textContent = `${expiring.length} chaufförer utgår inom 30 dagar`;
   const tbody = document.getElementById('warn-tbody');
   if (!expiring.length) {
     tbody.innerHTML = `<tr><td colspan="6"><div class="empty-ov">✅ Inga körtillstånd som utgår snart!</div></td></tr>`;
@@ -730,9 +705,7 @@ function renderWarn() {
     const st   = getStatus(r);
     const left = getDaysLeft(r);
     const is24h = r.validity === '24h';
-    const leftStr = left === null ? '—' : left < 0
-      ? (is24h ? `${Math.abs(left)} tim sedan` : `${Math.abs(left)} dagar sedan`)
-      : (is24h ? `${left} tim kvar` : `${left} dagar kvar`);
+    const leftStr = left === null ? '—' : left < 0 ? (is24h ? `${Math.abs(left)} tim sedan` : `${Math.abs(left)} dagar sedan`) : (is24h ? `${left} tim kvar` : `${left} dagar kvar`);
     return `<tr class="row-${st==='expired'||st==='not-approved'?'red':st}">
       <td>${statusPill(st)}</td>
       <td class="td-name">${esc(r.name)}</td>
@@ -744,7 +717,6 @@ function renderWarn() {
   }).join('');
 }
 
-// ── Toggles ───────────────────────────────────────────────────────────
 function setToggle(field, val) {
   toggleState[field] = val;
   document.getElementById(`${field}-ja`).className  = 'toggle-btn' + (val==='ja'  ? ' active-yes' : '');
@@ -757,7 +729,6 @@ function setValidity(mode) {
   document.getElementById('validity-24h').className  = 'toggle-btn' + (mode==='24h'  ? ' active-no'  : '');
 }
 
-// ── Doc upload ────────────────────────────────────────────────────────
 function handleDocUpload(input) {
   const file = input.files[0];
   if (!file) return;
@@ -770,18 +741,14 @@ function handleDocUpload(input) {
   reader.readAsDataURL(file);
 }
 
-// ── Register ──────────────────────────────────────────────────────────
-// Registrerar ny chaufför och sparar till SharePoint
 async function registerDriver() {
   const name = document.getElementById('r-name').value.trim();
   const date = document.getElementById('r-date').value;
   const by   = document.getElementById('r-by').value.trim();
   if (!name || !date || !by) { showToast('⚠ Fyll i namn, datum och inregistrerad av','#c8102e'); return; }
-
   const btn = document.getElementById('btn-submit');
   btn.disabled = true;
   btn.innerHTML = '<div class="spinner"></div> Sparar…';
-
   try {
     const writeRes = await fetch(PA_WRITE_URL, {
       method: 'POST',
@@ -789,8 +756,6 @@ async function registerDriver() {
       body: JSON.stringify({ action:'write', row:[name, date, by, 'ja', 'ja', toggleState.kort, docData||'', new Date().toISOString(), validityMode] })
     });
     if (!writeRes.ok) throw new Error('HTTP ' + writeRes.status);
-    
-
     document.getElementById('r-name').value = '';
     document.getElementById('r-date').valueAsDate = new Date();
     document.getElementById('r-by').value = '';
@@ -799,7 +764,6 @@ async function registerDriver() {
     document.getElementById('upload-area').classList.remove('has-file');
     document.getElementById('doc-name').textContent = '';
     document.getElementById('doc-input').value = '';
-
     await loadData();
     showToast(`✓ ${name} är registrerad!`);
   } catch(e) {
@@ -809,8 +773,6 @@ async function registerDriver() {
   btn.innerHTML = 'Spara körtillstånd';
 }
 
-// ── Overview ──────────────────────────────────────────────────────────
-// Renderar översiktstabellen med alla chaufförer
 function renderOverview(query) {
   const lower = (query||'').toLowerCase();
   const rows  = lower ? db.filter(r => r.name.toLowerCase().includes(lower)) : [...db];
@@ -818,10 +780,7 @@ function renderOverview(query) {
     const order = {red:0, yellow:1, green:2};
     return order[getStatus(a.date)] - order[getStatus(b.date)];
   });
-
-  document.getElementById('ov-count').textContent =
-    query ? `${rows.length} av ${db.length} träffar` : `${db.length} registrerade`;
-
+  document.getElementById('ov-count').textContent = query ? `${rows.length} av ${db.length} träffar` : `${db.length} registrerade`;
   const tbody = document.getElementById('ov-tbody');
   if (!rows.length) {
     tbody.innerHTML = `<tr><td colspan="9"><div class="empty-ov">${db.length===0?'Inga chaufförer registrerade ännu.':'Ingen träff på "'+esc(query)+'"'}</div></td></tr>`;
@@ -844,7 +803,6 @@ function renderOverview(query) {
   }).join('');
 }
 
-// ── Driver modal ──────────────────────────────────────────────────────
 let modalDocData = null;
 let modalToggleState = { bev: 'ja', kort: 'ja' };
 
@@ -852,27 +810,22 @@ function openDriverModal(driver) {
   const st = getStatus(driver);
   const stClass = st === 'green' ? 'green' : st === 'yellow' ? 'yellow' : 'red';
   const stLabels = {'green':'✓ Godkänd','yellow':'⚠ Utgår snart','expired':'✗ Utgånget','not-approved':'✗ Ej godkänd'};
-
   document.getElementById('modal-id').value = driver.id;
   document.getElementById('modal-title').textContent = driver.name;
   document.getElementById('modal-name').value = driver.name;
   document.getElementById('modal-date').value = driver.date;
   document.getElementById('modal-by').value = driver.by;
-
   const statusBar = document.getElementById('modal-status-bar');
   statusBar.className = 'modal-status-bar ' + stClass;
   statusBar.textContent = (stLabels[st]||'') + ' — Går ut: ' + getExpiry(driver);
-
   setModalToggle('bev', driver.bev || 'ja');
   setModalToggle('kort', driver.kort || 'ja');
-
   const docCurrent = document.getElementById('modal-doc-current');
   if (driver.doc) {
     docCurrent.innerHTML = `Nuvarande: <a href="${esc(driver.doc)}" target="_blank" style="color:var(--blue);text-decoration:underline;font-weight:600;">Öppna befintligt dokument</a>`;
   } else {
     docCurrent.textContent = 'Inget dokument sparat';
   }
-
   modalDocData = null;
   document.getElementById('modal-doc-name').textContent = '';
   document.getElementById('modal-upload-area').classList.remove('has-file');
@@ -909,11 +862,9 @@ async function saveDriver() {
   const date = document.getElementById('modal-date').value;
   const by   = document.getElementById('modal-by').value.trim();
   if (!name || !date || !by) { showToast('⚠ Fyll i alla fält', '#c8102e'); return; }
-
   const btn = document.getElementById('modal-save-btn');
   const txt = document.getElementById('modal-save-text');
   btn.disabled = true; txt.textContent = 'Sparar…';
-
   try {
     const currentDriver = db.find(r => r.id == id);
     const docToSave = modalDocData || (currentDriver ? currentDriver.doc : '');
@@ -932,15 +883,11 @@ async function saveDriver() {
   btn.disabled = false; txt.textContent = 'Spara ändringar';
 }
 
-// ── Render "Ej godkända" tab ──────────────────────────────────────────
-// Renderar fliken för ej godkända chaufförer
 function renderNotApproved() {
-  // Filter only not-approved (missing doc or kort=nej), exclude expired
   const rows = db.filter(r => getStatus(r) === 'not-approved');
   const badge = document.getElementById('notapproved-badge');
   badge.textContent = rows.length;
   badge.style.display = rows.length > 0 ? 'inline' : 'none';
-
   const tbody = document.getElementById('notapproved-tbody');
   if (!rows.length) {
     tbody.innerHTML = `<tr><td colspan="6"><div class="empty-ov">✅ Inga ej godkända chaufförer!</div></td></tr>`;
@@ -959,18 +906,15 @@ function renderNotApproved() {
   }).join('');
 }
 
-// ── Export CSV ────────────────────────────────────────────────────────
 function exportCSV() {
   const headers = ['Namn chaufför','Datum','Inregistrerad av','Utbildningsbevis','Körtillstånd','Går ut','Status'];
-  const csv = [headers, ...db.map(r => [r.name,r.date,r.by,r.bev,r.kort,getExpiry(r),getStatus(r)])]
-    .map(r => r.map(v => `"${v}"`).join(',')).join('\n');
+  const csv = [headers, ...db.map(r => [r.name,r.date,r.by,r.bev,r.kort,getExpiry(r),getStatus(r)])].map(r => r.map(v => `"${v}"`).join(',')).join('\n');
   const a = document.createElement('a');
   a.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent('\uFEFF'+csv);
   a.download = `kortillstand_${new Date().toISOString().slice(0,10)}.csv`;
   a.click();
 }
 
-// ── Toast ─────────────────────────────────────────────────────────────
 function showToast(msg, bg='#1a7a3c') {
   const t = document.getElementById('toast');
   t.textContent = msg; t.style.background = bg;
@@ -978,7 +922,6 @@ function showToast(msg, bg='#1a7a3c') {
   setTimeout(() => t.classList.remove('show'), 3500);
 }
 
-// ── Helpers ───────────────────────────────────────────────────────────
 function statusPill(st) {
   if (st==='green')        return '<span class="pill green">✓ Godkänd</span>';
   if (st==='yellow')       return '<span class="pill yellow">⚠ Utgår snart</span>';
@@ -990,7 +933,6 @@ function pill(v) { return v==='ja'?'<span class="pill yes">✓ Ja</span>':'<span
 function hl(text,q) { if(!q)return text; return text.replace(new RegExp(`(${q.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')})`, 'gi'),'<mark>$1</mark>'); }
 function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
-// ── Init ──────────────────────────────────────────────────────────────
 document.getElementById('r-date').valueAsDate = new Date();
 document.getElementById('k-input').focus();
 loadData();
