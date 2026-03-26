@@ -81,6 +81,8 @@ html, body { height: 100%; background: var(--bg); font-family: 'Barlow', sans-se
 .not-found-msg strong { color:var(--text); }
 .btn-reset { display:block; margin:22px auto 0; background:var(--bg); border:1.5px solid var(--border); border-radius:10px; padding:11px 36px; font-family:'Barlow',sans-serif; font-size:13px; font-weight:700; color:var(--muted); cursor:pointer; transition:all .15s; text-transform:uppercase; letter-spacing:.06em; }
 .btn-reset:hover { border-color:var(--blue); color:var(--blue); background:white; }
+.btn-delete { background:#fdf0f2; border:1.5px solid #f5b3be; border-radius:10px; padding:11px 24px; font-family:'Barlow',sans-serif; font-size:13px; font-weight:700; color:var(--red); cursor:pointer; transition:all .15s; text-transform:uppercase; letter-spacing:.06em; }
+.btn-delete:hover { background:var(--red); color:white; border-color:var(--red); }
 
 /* Multiple matches list */
 .match-list-item { display:flex; align-items:center; justify-content:space-between; padding:14px 18px; border-radius:12px; border:1.5px solid var(--border); margin-bottom:10px; cursor:pointer; transition:all .15s; background:var(--bg); }
@@ -182,7 +184,8 @@ mark { background:rgba(200,16,46,0.12); color:var(--red); border-radius:2px; pad
 .modal-input:focus { border-color:var(--blue); background:white; }
 .modal-footer { padding:16px 28px 24px; display:flex; gap:10px; justify-content:flex-end; }
 .btn-save { background:var(--blue); color:white; border:none; border-radius:10px; padding:12px 28px; font-family:'Barlow',sans-serif; font-size:14px; font-weight:700; cursor:pointer; transition:all .15s; text-transform:uppercase; letter-spacing:.05em; }
-.btn-save:hover { background:#2a5a1e; }
+.btn-save:hover:not(:disabled) { background:#2a5a1e; }
+.btn-save:disabled { background:var(--muted); cursor:not-allowed; }
 .btn-cancel { background:var(--bg); border:1.5px solid var(--border); border-radius:10px; padding:12px 20px; font-family:'Barlow',sans-serif; font-size:14px; font-weight:600; color:var(--muted); cursor:pointer; transition:all .15s; }
 .btn-cancel:hover { border-color:var(--red); color:var(--red); }
 .modal-status-bar { padding:12px 16px; border-radius:10px; font-size:13px; font-weight:600; margin-bottom:16px; }
@@ -271,8 +274,6 @@ mark { background:rgba(200,16,46,0.12); color:var(--red); border-radius:2px; pad
           </div>
         </div>
         <div class="form-divider"></div>
-
-
         <div class="form-group full">
           <label>Körtillstånd godkänt?</label>
           <div class="toggle-group">
@@ -369,7 +370,7 @@ mark { background:rgba(200,16,46,0.12); color:var(--red); border-radius:2px; pad
       <table class="ov-table">
         <thead>
           <tr>
-            <th>Status</th><th>Namn chaufför</th><th>Registrerad</th><th>Går ut</th><th>Inregistrerad av</th><th>Utbildningsbevis</th><th>Körtillstånd</th><th>Dokument</th><th></th>
+            <th>Status</th><th>Namn chaufför</th><th>Registrerad</th><th>Går ut</th><th>Inregistrerad av</th><th>Körtillstånd</th><th>Dokument</th><th></th>
           </tr>
         </thead>
         <tbody id="ov-tbody"></tbody>
@@ -377,7 +378,6 @@ mark { background:rgba(200,16,46,0.12); color:var(--red); border-radius:2px; pad
     </div>
   </div>
 </div>
-
 
 <!-- DRIVER DETAIL MODAL -->
 <div class="modal-overlay" id="driver-modal" onclick="if(event.target===this)closeModal()">
@@ -402,14 +402,7 @@ mark { background:rgba(200,16,46,0.12); color:var(--red); border-radius:2px; pad
           <div class="modal-label">Inregistrerad av</div>
           <input type="text" class="modal-input" id="modal-by">
         </div>
-        <div class="modal-group">
-          <div class="modal-label">Utbildningsbevis sparat?</div>
-          <div class="toggle-group">
-            <button class="toggle-btn" id="modal-bev-ja"  onclick="setModalToggle('bev','ja')">✓ Ja</button>
-            <button class="toggle-btn" id="modal-bev-nej" onclick="setModalToggle('bev','nej')">✗ Nej</button>
-          </div>
-        </div>
-        <div class="modal-group">
+        <div class="modal-group full">
           <div class="modal-label">Körtillstånd godkänt?</div>
           <div class="toggle-group">
             <button class="toggle-btn" id="modal-kort-ja"  onclick="setModalToggle('kort','ja')">✓ Ja</button>
@@ -436,20 +429,21 @@ mark { background:rgba(200,16,46,0.12); color:var(--red); border-radius:2px; pad
     </div>
   </div>
 </div>
+
 <div class="toast" id="toast"></div>
 
 <script>
 // ╔══════════════════════════════════════════════════════════════╗
 // ║   Körtillstånd App — Orkla Kumla                            ║
 // ║   Built by WildDaggerr (Linus)                              ║
-// ║   v1.0 COMPLETE                                             ║
+// ║   v1.1 UTAN UTBILDNINGSBEVIS                                ║
 // ╚══════════════════════════════════════════════════════════════╝
 
 const PA_WRITE_URL = 'https://a2abda53c55aef0997be14a2c7a027.5c.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/6f2956fd047649228804053fd9fdd371/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=Gq2uS6nsElHF0s5diQdWs9bIuSMUmEI8t5iCMIgCvI0';
 const PA_READ_URL  = 'https://a2abda53c55aef0997be14a2c7a027.5c.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/7e2efb813e6a47ddaa9d6b0d69ebaf33/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=XBCoUO_UhustWEa1y2k8WPMzXC_dxmPzqg0YVAZHHu0';
 
 let db = [];
-let toggleState = { bev: 'ja', regl: 'ja', kort: 'ja' };
+let toggleState = { kort: 'ja' };
 let validityMode = 'year';
 let docData = null;
 
@@ -511,7 +505,8 @@ function getExpiry(r) {
 function tick() {
   document.getElementById('clock').textContent = new Date().toLocaleTimeString('sv-SE', {hour:'2-digit',minute:'2-digit'});
 }
-tick(); setInterval(tick, 1000);
+tick(); 
+setInterval(tick, 1000);
 
 function showPage(id, btn) {
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
@@ -538,20 +533,22 @@ async function loadData() {
       name:  r['Chauffor']||'',
       date:  r['Datum'] ? r['Datum'].slice(0,10) : '',
       by:    r['Inregistrerad']||'',
-      bev:   r['Utbildningsbevis'] ? 'ja' : 'nej',
       regl:  r['Regler'] ? 'ja' : 'nej',
       kort:  r['Kortillstand'] ? 'ja' : 'nej',
       doc:   r['Dokument']||'',
       validity: r['Validity']||'year',
       created: r['Created']||''
     })).filter(r => r.name);
+
     document.getElementById('db-count').textContent = `${db.length} registrerade`;
     setSyncStatus('ok','Synkad');
     updateWarnBadge();
     renderOverview(document.getElementById('ov-search')?.value||'');
     renderWarn();
+    renderNotApproved();
   } catch(e) {
     setSyncStatus('error','Anslutningsfel');
+    console.error('Load error:', e);
   }
 }
 
@@ -564,13 +561,21 @@ function setSyncStatus(state, text) {
 function updateWarnBadge() {
   const warnCount = db.filter(r => getStatus(r) === 'yellow').length;
   const warnBadge = document.getElementById('warn-badge');
-  if (warnCount > 0) { warnBadge.textContent = warnCount; warnBadge.style.display = 'inline'; }
-  else { warnBadge.style.display = 'none'; }
+  if (warnCount > 0) { 
+    warnBadge.textContent = warnCount; 
+    warnBadge.style.display = 'inline'; 
+  } else { 
+    warnBadge.style.display = 'none'; 
+  }
   const naCount = db.filter(r => getStatus(r) === 'not-approved').length;
   const naBadge = document.getElementById('notapproved-badge');
   if (naBadge) {
-    if (naCount > 0) { naBadge.textContent = naCount; naBadge.style.display = 'inline'; }
-    else { naBadge.style.display = 'none'; }
+    if (naCount > 0) { 
+      naBadge.textContent = naCount; 
+      naBadge.style.display = 'inline'; 
+    } else { 
+      naBadge.style.display = 'none'; 
+    }
   }
 }
 
@@ -580,6 +585,7 @@ function kioskSearch() {
   const lower = query.toLowerCase();
   const matches = db.filter(r => r.name.toLowerCase().includes(lower));
   const area = document.getElementById('kiosk-result');
+
   if (matches.length === 0) {
     area.innerHTML = `
       <div class="result-card">
@@ -627,6 +633,7 @@ function showDriverResult(match) {
   const status = getStatus(match);
   const days   = getDaysLeft(match);
   const expiry = getExpiry(match);
+
   let headerClass, icon, title, sub;
   if (status === 'green') {
     headerClass = 'green'; icon = '✅';
@@ -643,6 +650,7 @@ function showDriverResult(match) {
     headerClass = 'red'; icon = '❌';
     title = 'Ej godkänd för truckkörning'; sub = esc(match.name);
   }
+
   area.innerHTML = `
     <div class="result-card">
       <div class="rc-header ${headerClass}">
@@ -657,14 +665,13 @@ function showDriverResult(match) {
           ${match.doc ? `<div class="info-tile"><div class="info-tile-label">Dokument</div><div class="info-tile-value"><a href="${esc(match.doc)}" target="_blank" style="color:var(--blue);text-decoration:underline">Öppna</a></div></div>` : ''}
         </div>
         <div class="checks">
-          <div class="chk ${match.bev==='ja'?'yes':'no'}">${match.bev==='ja'?'✓':'✗'} Utbildningsbevis</div>
           <div class="chk ${match.regl==='ja'?'yes':'no'}">${match.regl==='ja'?'✓':'✗'} Regler delgivna</div>
           <div class="chk ${match.kort==='ja'?'yes':'no'}">${match.kort==='ja'?'✓':'✗'} Körtillstånd utfärdat</div>
         </div>
         ${status !== 'green' ? `<div style="margin-top:16px;padding:12px 16px;background:${status==='yellow'?'var(--amber-bg)':'#fdf0f2'};border-radius:10px;font-size:14px;font-weight:600;color:${status==='yellow'?'var(--amber)':'var(--red)'};">${status==='not-approved' ? 'Information saknas — chauffören är ej godkänd för truckkörning. Kontakta personal.' : 'Kontakta personal för förnyelse av körtillstånd.'}</div>` : ''}
-        <div style="display:flex;gap:10px;margin-top:22px;justify-content:center;">
+        <div style="display:flex;gap:10px;margin-top:22px;justify-content:center;flex-wrap:wrap;">
           <button class="btn-reset" onclick="resetKiosk()" style="margin-top:0">Ny sökning</button>
-          <button onclick="deleteDriver('${match.id}', '${esc(match.name)}')" style="background:#fdf0f2;border:1.5px solid #f5b3be;border-radius:10px;padding:11px 24px;font-family:'Barlow',sans-serif;font-size:13px;font-weight:700;color:var(--red);cursor:pointer;">🗑 Ta bort chaufför</button>
+          <button class="btn-delete" onclick="deleteDriver('${match.id}', '${esc(match.name).replace(/'/g,"\\'")}')">🗑 Ta bort chaufför</button>
         </div>
       </div>
     </div>`;
@@ -685,16 +692,17 @@ async function deleteDriver(id, name) {
       body: JSON.stringify({ action: 'delete', id: id })
     });
     if (!res.ok) throw new Error('HTTP ' + res.status);
+    showToast(`✓ ${name} har tagits bort`);
     await loadData();
     resetKiosk();
-    showToast(`✓ ${name} har tagits bort`);
   } catch(e) {
     showToast('⚠ Fel vid borttagning: ' + e.message, '#c8102e');
+    console.error('Delete error:', e);
   }
 }
 
 function renderWarn() {
-  const expiring = db.filter(r => getStatus(r) === 'yellow').sort((a,b) => getDaysLeft(a.date) - getDaysLeft(b.date));
+  const expiring = db.filter(r => getStatus(r) === 'yellow').sort((a,b) => getDaysLeft(a) - getDaysLeft(b));
   document.getElementById('warn-banner-text').textContent = `${expiring.length} chaufförer utgår inom 30 dagar`;
   const tbody = document.getElementById('warn-tbody');
   if (!expiring.length) {
@@ -753,21 +761,26 @@ async function registerDriver() {
     const writeRes = await fetch(PA_WRITE_URL, {
       method: 'POST',
       headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({ action:'write', row:[name, date, by, 'ja', 'ja', toggleState.kort, docData||'', new Date().toISOString(), validityMode] })
+      body: JSON.stringify({ 
+        action: 'write', 
+        row: [name, date, by, 'ja', toggleState.kort, docData||'', new Date().toISOString(), validityMode] 
+      })
     });
     if (!writeRes.ok) throw new Error('HTTP ' + writeRes.status);
     document.getElementById('r-name').value = '';
     document.getElementById('r-date').valueAsDate = new Date();
     document.getElementById('r-by').value = '';
-    setToggle('bev','ja'); setToggle('regl','ja'); setToggle('kort','ja'); setValidity('year');
+    setToggle('kort','ja'); 
+    setValidity('year');
     docData = null;
     document.getElementById('upload-area').classList.remove('has-file');
     document.getElementById('doc-name').textContent = '';
     document.getElementById('doc-input').value = '';
-    await loadData();
     showToast(`✓ ${name} är registrerad!`);
+    await loadData();
   } catch(e) {
     showToast('⚠ Fel vid sparning: ' + e.message, '#c8102e');
+    console.error('Register error:', e);
   }
   btn.disabled = false;
   btn.innerHTML = 'Spara körtillstånd';
@@ -778,33 +791,32 @@ function renderOverview(query) {
   const rows  = lower ? db.filter(r => r.name.toLowerCase().includes(lower)) : [...db];
   rows.sort((a,b) => {
     const order = {red:0, yellow:1, green:2};
-    return order[getStatus(a.date)] - order[getStatus(b.date)];
+    return order[getStatus(a)] - order[getStatus(b)];
   });
   document.getElementById('ov-count').textContent = query ? `${rows.length} av ${db.length} träffar` : `${db.length} registrerade`;
   const tbody = document.getElementById('ov-tbody');
   if (!rows.length) {
-    tbody.innerHTML = `<tr><td colspan="9"><div class="empty-ov">${db.length===0?'Inga chaufförer registrerade ännu.':'Ingen träff på "'+esc(query)+'"'}</div></td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="8"><div class="empty-ov">${db.length===0?'Inga chaufförer registrerade ännu.':'Ingen träff på "'+esc(query)+'"'}</div></td></tr>`;
     return;
   }
   tbody.innerHTML = rows.map(r => {
     const st = getStatus(r);
-    const rJson = encodeURIComponent(JSON.stringify(r));
-    return `<tr class="row-${st==='expired'||st==='not-approved'?'red':st}" style="cursor:pointer" onclick="openDriverModal(JSON.parse(decodeURIComponent('${rJson}')))">
+    const rJson = JSON.stringify(r).replace(/"/g, '&quot;');
+    return `<tr class="row-${st==='expired'||st==='not-approved'?'red':st}" style="cursor:pointer" onclick='openDriverModal(${rJson})'>
       <td>${statusPill(st)}</td>
       <td class="td-name">${hl(esc(r.name),lower)}</td>
       <td style="color:var(--muted);font-size:13px">${esc(r.date)}</td>
       <td style="color:var(--muted);font-size:13px">${getExpiry(r)}</td>
       <td style="color:var(--muted)">${esc(r.by)}</td>
-      <td>${pill(r.bev)}</td>
       <td>${pill(r.kort)}</td>
-      <td>${r.doc?`<a href="${r.doc}" target="_blank" style="color:var(--blue);font-size:12px;font-weight:600;text-decoration:underline">Öppna</a>`:'<span style="color:var(--dim)">—</span>'}</td>
-      <td><button onclick="event.stopPropagation();deleteDriver('${r.id}', '${esc(r.name)}')" style="background:none;border:none;cursor:pointer;color:var(--dim);padding:4px 8px;border-radius:6px;font-size:14px;transition:all .15s;" onmouseover="this.style.color='var(--red)';this.style.background='#fdf0f2'" onmouseout="this.style.color='var(--dim)';this.style.background='none'">✕</button></td>
+      <td>${r.doc?`<a href="${r.doc}" target="_blank" onclick="event.stopPropagation()" style="color:var(--blue);font-size:12px;font-weight:600;text-decoration:underline">Öppna</a>`:'<span style="color:var(--dim)">—</span>'}</td>
+      <td><button onclick="event.stopPropagation();deleteDriver('${r.id}', '${esc(r.name).replace(/'/g,"\\'")}');" style="background:none;border:none;cursor:pointer;color:var(--dim);padding:4px 8px;border-radius:6px;font-size:14px;transition:all .15s;" onmouseover="this.style.color='var(--red)';this.style.background='#fdf0f2'" onmouseout="this.style.color='var(--dim)';this.style.background='none'">✕</button></td>
     </tr>`;
   }).join('');
 }
 
 let modalDocData = null;
-let modalToggleState = { bev: 'ja', kort: 'ja' };
+let modalToggleState = { kort: 'ja' };
 
 function openDriverModal(driver) {
   const st = getStatus(driver);
@@ -818,7 +830,6 @@ function openDriverModal(driver) {
   const statusBar = document.getElementById('modal-status-bar');
   statusBar.className = 'modal-status-bar ' + stClass;
   statusBar.textContent = (stLabels[st]||'') + ' — Går ut: ' + getExpiry(driver);
-  setModalToggle('bev', driver.bev || 'ja');
   setModalToggle('kort', driver.kort || 'ja');
   const docCurrent = document.getElementById('modal-doc-current');
   if (driver.doc) {
@@ -871,48 +882,52 @@ async function saveDriver() {
     const res = await fetch(PA_WRITE_URL, {
       method: 'POST',
       headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({ action:'update', id, row:[name, date, by, modalToggleState.bev, 'ja', modalToggleState.kort, docToSave, new Date().toISOString()] })
+      body: JSON.stringify({ 
+        action: 'update', 
+        id: id, 
+        row: [name, date, by, 'ja', modalToggleState.kort, docToSave, new Date().toISOString()] 
+      })
     });
     if (!res.ok) throw new Error('HTTP ' + res.status);
+    showToast(`✓ ${name} har uppdaterats!`);
     await loadData();
     closeModal();
-    showToast(`✓ ${name} har uppdaterats!`);
   } catch(e) {
     showToast('⚠ Fel: ' + e.message, '#c8102e');
+    console.error('Update error:', e);
   }
   btn.disabled = false; txt.textContent = 'Spara ändringar';
 }
 
 function renderNotApproved() {
   const rows = db.filter(r => getStatus(r) === 'not-approved');
-  const badge = document.getElementById('notapproved-badge');
-  badge.textContent = rows.length;
-  badge.style.display = rows.length > 0 ? 'inline' : 'none';
   const tbody = document.getElementById('notapproved-tbody');
   if (!rows.length) {
     tbody.innerHTML = `<tr><td colspan="6"><div class="empty-ov">✅ Inga ej godkända chaufförer!</div></td></tr>`;
     return;
   }
   tbody.innerHTML = rows.map(r => {
-    const rJson = encodeURIComponent(JSON.stringify(r));
-    return `<tr class="row-red" style="cursor:pointer" onclick="openDriverModal(JSON.parse(decodeURIComponent('${rJson}')))">
+    const rJson = JSON.stringify(r).replace(/"/g, '&quot;');
+    return `<tr class="row-red" style="cursor:pointer" onclick='openDriverModal(${rJson})'>
       <td class="td-name">${esc(r.name)}</td>
       <td style="color:var(--muted);font-size:13px">${esc(r.date)}</td>
       <td style="color:var(--muted)">${esc(r.by)}</td>
       <td>${pill(r.kort)}</td>
-      <td>${r.doc ? `<a href="${r.doc}" target="_blank" style="color:var(--blue);font-size:12px;font-weight:600;text-decoration:underline" onclick="event.stopPropagation()">Öppna</a>` : '<span style="color:var(--red);font-size:12px;font-weight:600">Saknas</span>'}</td>
-      <td><button onclick="event.stopPropagation();deleteDriver('${r.id}', '${esc(r.name)}')" style="background:none;border:none;cursor:pointer;color:var(--dim);padding:4px 8px;border-radius:6px;font-size:14px;" onmouseover="this.style.color='var(--red)';this.style.background='#fdf0f2'" onmouseout="this.style.color='var(--dim)';this.style.background='none'">✕</button></td>
+      <td>${r.doc ? `<a href="${r.doc}" target="_blank" onclick="event.stopPropagation()" style="color:var(--blue);font-size:12px;font-weight:600;text-decoration:underline">Öppna</a>` : '<span style="color:var(--red);font-size:12px;font-weight:600">Saknas</span>'}</td>
+      <td><button onclick="event.stopPropagation();deleteDriver('${r.id}', '${esc(r.name).replace(/'/g,"\\'")}');" style="background:none;border:none;cursor:pointer;color:var(--dim);padding:4px 8px;border-radius:6px;font-size:14px;" onmouseover="this.style.color='var(--red)';this.style.background='#fdf0f2'" onmouseout="this.style.color='var(--dim)';this.style.background='none'">✕</button></td>
     </tr>`;
   }).join('');
 }
 
 function exportCSV() {
-  const headers = ['Namn chaufför','Datum','Inregistrerad av','Utbildningsbevis','Körtillstånd','Går ut','Status'];
-  const csv = [headers, ...db.map(r => [r.name,r.date,r.by,r.bev,r.kort,getExpiry(r),getStatus(r)])].map(r => r.map(v => `"${v}"`).join(',')).join('\n');
+  const headers = ['Namn chaufför','Datum','Inregistrerad av','Körtillstånd','Går ut','Status'];
+  const csv = [headers, ...db.map(r => [r.name,r.date,r.by,r.kort,getExpiry(r),getStatus(r)])]
+    .map(r => r.map(v => `"${v}"`).join(',')).join('\n');
   const a = document.createElement('a');
   a.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent('\uFEFF'+csv);
   a.download = `kortillstand_${new Date().toISOString().slice(0,10)}.csv`;
   a.click();
+  showToast('✓ CSV exporterad!');
 }
 
 function showToast(msg, bg='#1a7a3c') {
@@ -929,9 +944,24 @@ function statusPill(st) {
   if (st==='not-approved') return '<span class="pill red">✗ Ej godkänd</span>';
   return '<span class="pill red">✗ Ej godkänd</span>';
 }
-function pill(v) { return v==='ja'?'<span class="pill yes">✓ Ja</span>':'<span class="pill no">✗ Nej</span>'; }
-function hl(text,q) { if(!q)return text; return text.replace(new RegExp(`(${q.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')})`, 'gi'),'<mark>$1</mark>'); }
-function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+function pill(v) { 
+  return v==='ja'?'<span class="pill yes">✓ Ja</span>':'<span class="pill no">✗ Nej</span>'; 
+}
+
+function hl(text,q) { 
+  if(!q) return text; 
+  return text.replace(new RegExp(`(${q.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')})`, 'gi'),'<mark>$1</mark>'); 
+}
+
+function esc(s) { 
+  return String(s||'')
+    .replace(/&/g,'&amp;')
+    .replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;')
+    .replace(/'/g,'&#39;'); 
+}
 
 document.getElementById('r-date').valueAsDate = new Date();
 document.getElementById('k-input').focus();
