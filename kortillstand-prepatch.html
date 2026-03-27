@@ -436,7 +436,7 @@ mark { background:rgba(200,16,46,0.12); color:var(--red); border-radius:2px; pad
 // ╔══════════════════════════════════════════════════════════════╗
 // ║   Körtillstånd App — Orkla Kumla                            ║
 // ║   Built by WildDaggerr (Linus)                              ║
-// ║   v1.1 UTAN UTBILDNINGSBEVIS                                ║
+// ║   v1.2 FIXED UPDATE ROW ARRAY                               ║
 // ╚══════════════════════════════════════════════════════════════╝
 
 const PA_WRITE_URL = 'https://a2abda53c55aef0997be14a2c7a027.5c.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/6f2956fd047649228804053fd9fdd371/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=Gq2uS6nsElHF0s5diQdWs9bIuSMUmEI8t5iCMIgCvI0';
@@ -879,13 +879,15 @@ async function saveDriver() {
   try {
     const currentDriver = db.find(r => r.id == id);
     const docToSave = modalDocData || (currentDriver ? currentDriver.doc : '');
+    // ✅ FIXED: Added validity as 8th element to match CREATE structure
+    const validityToSend = currentDriver ? currentDriver.validity : 'year';
     const res = await fetch(PA_WRITE_URL, {
       method: 'POST',
       headers: {'Content-Type': 'application/json'},
       body: JSON.stringify({ 
         action: 'update', 
         id: id, 
-        row: [name, date, by, 'ja', modalToggleState.kort, docToSave, new Date().toISOString()] 
+        row: [name, date, by, 'ja', modalToggleState.kort, docToSave, new Date().toISOString(), validityToSend] 
       })
     });
     if (!res.ok) throw new Error('HTTP ' + res.status);
