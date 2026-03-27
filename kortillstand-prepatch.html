@@ -883,7 +883,7 @@ async function saveDriver() {
       method: 'POST',
       headers: {'Content-Type': 'application/json'},
       body: JSON.stringify({ 
-        action: 'delete', 
+        action: 'update', 
         id: id, 
         row: [name, date, by, 'ja', modalToggleState.kort, docToSave, new Date().toISOString()] 
       })
