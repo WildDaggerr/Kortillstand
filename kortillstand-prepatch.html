@@ -880,7 +880,7 @@ async function saveDriver() {
     const currentDriver = db.find(r => r.id == id);
     const docToSave = modalDocData || (currentDriver ? currentDriver.doc : '');
     // ✅ FIXED: Added validity as 8th element to match CREATE structure
-    const validityToSend = currentDriver ? currentDriver.validity : 'year';
+    const validityToSend = currentDriver && currentDriver.validity ? (currentDriver.validity.Value || currentDriver.validity) : 'year';
     const res = await fetch(PA_WRITE_URL, {
       method: 'POST',
       headers: {'Content-Type': 'application/json'},
