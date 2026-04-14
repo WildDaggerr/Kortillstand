@@ -6,219 +6,1165 @@
 <title>Körtillstånd – Orkla Kumla</title>
 <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@300;400;500;600;700;800&family=Barlow+Condensed:wght@600;700;800&display=swap" rel="stylesheet">
 <style>
+/* ═══════════════════════════════════════════════════════════════════════════
+   BASE & VARIABLES
+   ═══════════════════════════════════════════════════════════════════════════ */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
 :root {
-  --red: #c8102e; --green: #1a7a3c; --blue: #3A6A2E;
-  --yellow: #f0c040; --amber: #d48000; --amber-bg: #fff8e1; --amber-border: #f0c040;
-  --bg: #eef1f7; --surface: #ffffff; --border: #dde3ee;
-  --text: #0f1c2e; --muted: #6b7a99; --dim: #b0b8cc;
-  --radius: 14px; --shadow: 0 2px 16px rgba(15,28,46,0.09);
+  /* Brand colors */
+  --red: #c8102e;
+  --green: #1a7a3c;
+  --blue: #3A6A2E;
+  --yellow: #f0c040;
+  
+  /* Semantic colors */
+  --bg: #eef1f7;
+  --surface: #ffffff;
+  --border: #dde3ee;
+  --text: #0f1c2e;
+  --muted: #6b7a99;
+  --dim: #b0b8cc;
+  
+  /* Spacing & style */
+  --radius: 14px;
+  --shadow: 0 2px 16px rgba(15,28,46,0.09);
   --shadow-lg: 0 8px 48px rgba(15,28,46,0.14);
 }
-html, body { height: 100%; background: var(--bg); font-family: 'Barlow', sans-serif; color: var(--text); }
 
-/* Topbar */
-.topbar { background: var(--blue); height: 60px; display: flex; align-items: center; padding: 0 32px; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 16px rgba(15,28,46,0.2); }
-.logo { font-family: 'Barlow Condensed', sans-serif; font-size: 20px; font-weight: 800; color: white; text-transform: uppercase; letter-spacing: .05em; margin-right: 40px; }
-.logo span { color: var(--yellow); }
-.nav { display: flex; gap: 4px; flex: 1; }
-.nav-btn { background: none; border: none; color: rgba(255,255,255,0.6); font-family: 'Barlow', sans-serif; font-size: 14px; font-weight: 600; padding: 8px 18px; border-radius: 8px; cursor: pointer; transition: all .15s; text-transform: uppercase; letter-spacing: .05em; display: flex; align-items: center; gap: 7px; position: relative; }
-.nav-btn:hover { background: rgba(255,255,255,0.1); color: white; }
-.nav-btn.active { background: rgba(255,255,255,0.15); color: white; }
-.nav-badge { background: var(--yellow); color: var(--blue); font-size: 10px; font-weight: 800; border-radius: 10px; padding: 1px 6px; min-width: 18px; text-align: center; }
-.topbar-right { margin-left: auto; display: flex; align-items: center; gap: 16px; }
-.clock { font-family: 'Barlow Condensed', sans-serif; font-size: 18px; font-weight: 600; color: rgba(255,255,255,0.6); }
-.db-count { font-size: 12px; font-weight: 600; background: rgba(255,255,255,0.12); color: rgba(255,255,255,0.7); padding: 4px 12px; border-radius: 20px; }
-.sync-wrap { display: flex; align-items: center; gap: 6px; font-size: 11px; color: rgba(255,255,255,0.5); }
-.sync-dot { width: 7px; height: 7px; border-radius: 50%; background: #7fe8a0; flex-shrink: 0; }
-.sync-dot.syncing { background: var(--yellow); animation: pulse .8s infinite; }
-.sync-dot.error { background: #ff8080; }
-@keyframes pulse { 0%,100%{opacity:1}50%{opacity:.3} }
-@keyframes spin { to{transform:rotate(360deg)} }
-.spinner { width:18px;height:18px;border:2.5px solid rgba(255,255,255,0.3);border-top-color:white;border-radius:50%;animation:spin .7s linear infinite;display:inline-block; }
+html, body {
+  height: 100%;
+  background: var(--bg);
+  font-family: 'Barlow', sans-serif;
+  color: var(--text);
+}
 
-/* Pages */
-.page { display: none; min-height: calc(100vh - 60px); }
-.page.active { display: block; }
+/* ═══════════════════════════════════════════════════════════════════════════
+   TOPBAR & NAVIGATION
+   ═══════════════════════════════════════════════════════════════════════════ */
+.topbar {
+  background: var(--blue);
+  height: 60px;
+  display: flex;
+  align-items: center;
+  padding: 0 32px;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  box-shadow: 0 2px 16px rgba(15,28,46,0.2);
+}
 
-/* Kiosk */
-.kiosk { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: calc(100vh - 60px); padding: 40px 24px; gap: 32px; }
-.kiosk h1 { font-family: 'Barlow Condensed', sans-serif; font-size: clamp(36px,5vw,64px); font-weight: 800; color: var(--blue); text-transform: uppercase; line-height: 1; text-align: center; }
-.kiosk p { font-size: clamp(15px,1.8vw,20px); color: var(--muted); text-align: center; }
-.search-box { background: var(--surface); border: 2px solid var(--border); border-radius: 16px; padding: 8px 8px 8px 24px; display: flex; align-items: center; gap: 12px; box-shadow: var(--shadow-lg); transition: all .2s; width: 100%; max-width: 640px; }
-.search-box:focus-within { border-color: var(--blue); box-shadow: 0 8px 48px rgba(26,58,92,0.18); }
-#k-input { flex:1; border:none; outline:none; font-family:'Barlow',sans-serif; font-size:clamp(22px,3vw,34px); font-weight:500; color:var(--text); background:transparent; }
-#k-input::placeholder { color: var(--dim); }
-.btn-primary { background:var(--blue); color:white; border:none; border-radius:10px; padding:14px 28px; font-family:'Barlow',sans-serif; font-size:clamp(14px,1.5vw,18px); font-weight:700; cursor:pointer; transition:all .15s; text-transform:uppercase; letter-spacing:.05em; white-space:nowrap; }
-.btn-primary:hover { background:#0f2540; transform:translateY(-1px); }
-.kiosk-result { width:100%; max-width:720px; }
-.idle-hint { text-align:center; padding:24px; color:var(--dim); }
-.idle-hint .big { font-size:48px; margin-bottom:8px; }
+.logo {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 20px;
+  font-weight: 800;
+  color: white;
+  text-transform: uppercase;
+  letter-spacing: .05em;
+  margin-right: 40px;
+}
+
+.logo span {
+  color: var(--yellow);
+}
+
+.nav {
+  display: flex;
+  gap: 4px;
+  flex: 1;
+}
+
+.nav-btn {
+  background: none;
+  border: none;
+  color: rgba(255,255,255,0.6);
+  font-family: 'Barlow', sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  padding: 8px 18px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all .15s;
+  text-transform: uppercase;
+  letter-spacing: .05em;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.nav-btn:hover {
+  background: rgba(255,255,255,0.1);
+  color: white;
+}
+
+.nav-btn.active {
+  background: rgba(255,255,255,0.15);
+  color: white;
+}
+
+.nav-badge {
+  background: var(--red);
+  color: white;
+  font-size: 10px;
+  font-weight: 800;
+  border-radius: 10px;
+  padding: 2px 6px;
+  min-width: 18px;
+  text-align: center;
+}
+
+.topbar-right {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.clock {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 18px;
+  font-weight: 600;
+  color: rgba(255,255,255,0.6);
+}
+
+.db-count {
+  font-size: 12px;
+  font-weight: 600;
+  background: rgba(255,255,255,0.12);
+  color: rgba(255,255,255,0.7);
+  padding: 4px 12px;
+  border-radius: 20px;
+}
+
+.sync-wrap {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  color: rgba(255,255,255,0.5);
+}
+
+.sync-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #7fe8a0;
+  flex-shrink: 0;
+}
+
+.sync-dot.syncing {
+  background: var(--yellow);
+  animation: pulse .8s infinite;
+}
+
+.sync-dot.error {
+  background: #ff8080;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: .3; }
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.spinner {
+  width: 18px;
+  height: 18px;
+  border: 2.5px solid rgba(255,255,255,0.3);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: spin .7s linear infinite;
+  display: inline-block;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   PAGE LAYOUT
+   ═══════════════════════════════════════════════════════════════════════════ */
+.page {
+  display: none;
+  min-height: calc(100vh - 60px);
+}
+
+.page.active {
+  display: block;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   KIOSK / SEARCH PAGE
+   ═══════════════════════════════════════════════════════════════════════════ */
+.kiosk {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: calc(100vh - 60px);
+  padding: 40px 24px;
+  gap: 32px;
+}
+
+.kiosk h1 {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: clamp(36px, 5vw, 64px);
+  font-weight: 800;
+  color: var(--blue);
+  text-transform: uppercase;
+  line-height: 1;
+  text-align: center;
+}
+
+.kiosk p {
+  font-size: clamp(15px, 1.8vw, 20px);
+  color: var(--muted);
+  text-align: center;
+}
+
+.search-box {
+  background: var(--surface);
+  border: 2px solid var(--border);
+  border-radius: 16px;
+  padding: 8px 8px 8px 24px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  box-shadow: var(--shadow-lg);
+  transition: all .2s;
+  width: 100%;
+  max-width: 640px;
+}
+
+.search-box:focus-within {
+  border-color: var(--blue);
+  box-shadow: 0 8px 48px rgba(26,58,92,0.18);
+}
+
+#k-input {
+  flex: 1;
+  border: none;
+  outline: none;
+  font-family: 'Barlow', sans-serif;
+  font-size: clamp(22px, 3vw, 34px);
+  font-weight: 500;
+  color: var(--text);
+  background: transparent;
+}
+
+#k-input::placeholder {
+  color: var(--dim);
+}
+
+.btn-primary {
+  background: var(--blue);
+  color: white;
+  border: none;
+  border-radius: 10px;
+  padding: 14px 28px;
+  font-family: 'Barlow', sans-serif;
+  font-size: clamp(14px, 1.5vw, 18px);
+  font-weight: 700;
+  cursor: pointer;
+  transition: all .15s;
+  text-transform: uppercase;
+  letter-spacing: .05em;
+  white-space: nowrap;
+}
+
+.btn-primary:hover {
+  background: #2a5a1e;
+  transform: translateY(-1px);
+}
+
+.kiosk-result {
+  width: 100%;
+  max-width: 720px;
+}
+
+.idle-hint {
+  text-align: center;
+  padding: 24px;
+  color: var(--dim);
+}
+
+.idle-hint .big {
+  font-size: 48px;
+  margin-bottom: 8px;
+}
 
 /* Result cards */
-.result-card { border-radius:20px; overflow:hidden; box-shadow:var(--shadow-lg); animation:popIn .25s cubic-bezier(.34,1.56,.64,1); }
-@keyframes popIn { from{opacity:0;transform:scale(.94) translateY(12px)} to{opacity:1;transform:scale(1) translateY(0)} }
-.rc-header { padding:28px 36px; display:flex; align-items:center; gap:20px; }
-.rc-header.green  { background: var(--green); }
-.rc-header.red    { background: var(--red); }
-.rc-header.yellow { background: var(--amber); }
-.rc-icon { font-size:52px; filter:drop-shadow(0 2px 8px rgba(0,0,0,0.2)); }
-.rc-title { font-family:'Barlow Condensed',sans-serif; font-size:clamp(26px,3.5vw,42px); font-weight:800; color:white; text-transform:uppercase; line-height:1; }
-.rc-sub { font-size:clamp(15px,1.8vw,20px); font-weight:600; color:rgba(255,255,255,.85); margin-top:4px; }
-.rc-body { background:var(--surface); padding:28px 36px; }
-.info-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); gap:14px; margin-bottom:20px; }
-.info-tile { background:var(--bg); border:1px solid var(--border); border-radius:12px; padding:14px 18px; }
-.info-tile-label { font-size:10px; font-weight:700; color:var(--muted); text-transform:uppercase; letter-spacing:.1em; margin-bottom:5px; }
-.info-tile-value { font-size:clamp(13px,1.4vw,16px); font-weight:700; }
-.info-tile.warn { background: var(--amber-bg); border-color: var(--amber-border); }
-.info-tile.warn .info-tile-value { color: var(--amber); }
-.checks { display:flex; flex-wrap:wrap; gap:10px; }
-.chk { display:flex; align-items:center; gap:7px; padding:9px 16px; border-radius:9px; font-size:13px; font-weight:600; border:1.5px solid; }
-.chk.yes { background:#eaf7ef; color:var(--green); border-color:#a8dfc0; }
-.chk.no  { background:#fdf0f2; color:var(--red);   border-color:#f5b3be; }
-.not-found-msg { text-align:center; padding:24px 0; }
-.not-found-msg p { font-size:clamp(15px,1.8vw,19px); color:var(--muted); line-height:1.7; }
-.not-found-msg strong { color:var(--text); }
-.btn-reset { display:block; margin:22px auto 0; background:var(--bg); border:1.5px solid var(--border); border-radius:10px; padding:11px 36px; font-family:'Barlow',sans-serif; font-size:13px; font-weight:700; color:var(--muted); cursor:pointer; transition:all .15s; text-transform:uppercase; letter-spacing:.06em; }
-.btn-reset:hover { border-color:var(--blue); color:var(--blue); background:white; }
-.btn-delete { background:#fdf0f2; border:1.5px solid #f5b3be; border-radius:10px; padding:11px 24px; font-family:'Barlow',sans-serif; font-size:13px; font-weight:700; color:var(--red); cursor:pointer; transition:all .15s; text-transform:uppercase; letter-spacing:.06em; }
-.btn-delete:hover { background:var(--red); color:white; border-color:var(--red); }
+.result-card {
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: var(--shadow-lg);
+  animation: popIn .25s cubic-bezier(.34,1.56,.64,1);
+}
+
+@keyframes popIn {
+  from {
+    opacity: 0;
+    transform: scale(.94) translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.rc-header {
+  padding: 32px 36px;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.rc-header.green {
+  background: var(--green);
+}
+
+.rc-header.red {
+  background: var(--red);
+}
+
+.rc-icon {
+  font-size: 56px;
+  filter: drop-shadow(0 2px 8px rgba(0,0,0,0.2));
+}
+
+.rc-title {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: clamp(28px, 3.5vw, 44px);
+  font-weight: 800;
+  color: white;
+  text-transform: uppercase;
+  line-height: 1;
+}
+
+.rc-sub {
+  font-size: clamp(16px, 1.8vw, 21px);
+  font-weight: 600;
+  color: rgba(255,255,255,.85);
+  margin-top: 6px;
+}
+
+.rc-body {
+  background: var(--surface);
+  padding: 32px 36px;
+}
+
+.info-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.info-tile {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 16px 18px;
+}
+
+.info-tile-label {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: .1em;
+  margin-bottom: 6px;
+}
+
+.info-tile-value {
+  font-size: clamp(14px, 1.4vw, 17px);
+  font-weight: 700;
+}
+
+.checks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.chk {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 10px 18px;
+  border-radius: 9px;
+  font-size: 14px;
+  font-weight: 600;
+  border: 1.5px solid;
+}
+
+.chk.yes {
+  background: #eaf7ef;
+  color: var(--green);
+  border-color: #a8dfc0;
+}
+
+.chk.no {
+  background: #fdf0f2;
+  color: var(--red);
+  border-color: #f5b3be;
+}
+
+.not-found-msg {
+  text-align: center;
+  padding: 28px 0;
+}
+
+.not-found-msg p {
+  font-size: clamp(15px, 1.8vw, 19px);
+  color: var(--muted);
+  line-height: 1.7;
+  margin-bottom: 12px;
+}
+
+.not-found-msg strong {
+  color: var(--text);
+}
+
+.btn-reset {
+  display: block;
+  margin: 24px auto 0;
+  background: var(--bg);
+  border: 1.5px solid var(--border);
+  border-radius: 10px;
+  padding: 12px 36px;
+  font-family: 'Barlow', sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--muted);
+  cursor: pointer;
+  transition: all .15s;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+}
+
+.btn-reset:hover {
+  border-color: var(--blue);
+  color: var(--blue);
+  background: white;
+}
+
+.btn-delete {
+  background: #fdf0f2;
+  border: 1.5px solid #f5b3be;
+  border-radius: 10px;
+  padding: 12px 24px;
+  font-family: 'Barlow', sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--red);
+  cursor: pointer;
+  transition: all .15s;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+}
+
+.btn-delete:hover {
+  background: var(--red);
+  color: white;
+  border-color: var(--red);
+}
 
 /* Multiple matches list */
-.match-list-item { display:flex; align-items:center; justify-content:space-between; padding:14px 18px; border-radius:12px; border:1.5px solid var(--border); margin-bottom:10px; cursor:pointer; transition:all .15s; background:var(--bg); }
-.match-list-item:hover { border-color:var(--blue); background:white; }
-.match-name { font-weight:700; font-size:16px; color:var(--blue); }
-.match-meta { font-size:12px; color:var(--muted); margin-top:3px; }
-.match-status { display:flex; align-items:center; gap:8px; }
-.status-dot { width:10px; height:10px; border-radius:50%; flex-shrink:0; }
-.status-dot.green  { background: var(--green); }
-.status-dot.yellow { background: var(--amber); }
-.status-dot.red    { background: var(--red); }
+.match-list-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  border-radius: 12px;
+  border: 1.5px solid var(--border);
+  margin-bottom: 12px;
+  cursor: pointer;
+  transition: all .15s;
+  background: var(--bg);
+}
 
-/* Registrera */
-.reg-page { max-width:720px; margin:0 auto; padding:40px 24px 80px; }
-.page-title { font-family:'Barlow Condensed',sans-serif; font-size:36px; font-weight:800; color:var(--blue); text-transform:uppercase; margin-bottom:6px; }
-.page-sub { font-size:15px; color:var(--muted); margin-bottom:32px; }
-.form-card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:32px; box-shadow:var(--shadow); }
-.form-grid { display:grid; grid-template-columns:1fr 1fr; gap:20px; }
-.form-group { display:flex; flex-direction:column; gap:7px; }
-.form-group.full { grid-column:1/-1; }
-label { font-size:12px; font-weight:700; color:var(--muted); text-transform:uppercase; letter-spacing:.08em; }
-input[type=text], input[type=date] { background:var(--bg); border:1.5px solid var(--border); border-radius:10px; padding:12px 16px; font-family:'Barlow',sans-serif; font-size:15px; font-weight:500; color:var(--text); outline:none; transition:all .15s; }
-input[type=text]:focus, input[type=date]:focus { border-color:var(--blue); background:white; box-shadow:0 0 0 3px rgba(26,58,92,0.08); }
-.toggle-group { display:flex; gap:8px; }
-.toggle-btn { flex:1; background:var(--bg); border:1.5px solid var(--border); border-radius:9px; padding:11px; font-family:'Barlow',sans-serif; font-size:14px; font-weight:600; cursor:pointer; transition:all .15s; text-align:center; color:var(--muted); }
-.toggle-btn.active-yes { background:#eaf7ef; color:var(--green); border-color:var(--green); }
-.toggle-btn.active-no  { background:#fdf0f2; color:var(--red);   border-color:var(--red); }
-.upload-area { border:2px dashed var(--border); border-radius:10px; padding:20px; text-align:center; cursor:pointer; transition:all .15s; background:var(--bg); }
-.upload-area:hover { border-color:var(--blue); }
-.upload-area.has-file { border-color:var(--green); background:#eaf7ef; }
-#doc-input { display:none; }
-.form-divider { height:1px; background:var(--border); grid-column:1/-1; }
-.btn-submit { width:100%; background:var(--blue); color:white; border:none; border-radius:10px; padding:16px; font-family:'Barlow',sans-serif; font-size:16px; font-weight:700; cursor:pointer; transition:all .2s; text-transform:uppercase; letter-spacing:.06em; display:flex; align-items:center; justify-content:center; gap:10px; }
-.btn-submit:hover:not(:disabled) { background:#0f2540; transform:translateY(-1px); }
-.btn-submit:disabled { background:var(--muted); cursor:not-allowed; }
+.match-list-item:hover {
+  border-color: var(--blue);
+  background: white;
+  transform: translateX(4px);
+}
 
-/* Utgår snart */
-.warn-page { max-width:1000px; margin:0 auto; padding:40px 24px 80px; }
-.warn-banner { background:var(--amber-bg); border:1.5px solid var(--amber-border); border-radius:var(--radius); padding:20px 28px; margin-bottom:28px; display:flex; align-items:center; gap:16px; }
-.warn-banner-icon { font-size:32px; }
-.warn-banner-text { font-size:15px; color:var(--amber); font-weight:600; }
+.match-name {
+  font-weight: 700;
+  font-size: 17px;
+  color: var(--blue);
+}
 
-/* Översikt */
-.ov-page { max-width:1100px; margin:0 auto; padding:40px 24px 80px; }
-.ov-header { display:flex; align-items:flex-end; justify-content:space-between; margin-bottom:24px; flex-wrap:wrap; gap:12px; }
-.ov-toolbar { display:flex; align-items:center; gap:14px; margin-bottom:24px; flex-wrap:wrap; }
-.ov-search-wrap { flex:1; min-width:200px; position:relative; }
-.ov-search-wrap svg { position:absolute; left:14px; top:50%; transform:translateY(-50%); color:var(--dim); pointer-events:none; }
-#ov-search { width:100%; background:var(--surface); border:1.5px solid var(--border); border-radius:10px; padding:11px 14px 11px 42px; font-family:'Barlow',sans-serif; font-size:15px; color:var(--text); outline:none; transition:all .15s; }
-#ov-search:focus { border-color:var(--blue); }
-#ov-search::placeholder { color:var(--dim); }
-.btn-icon { background:var(--bg); border:1.5px solid var(--border); border-radius:9px; padding:10px 16px; font-family:'Barlow',sans-serif; font-size:13px; font-weight:600; color:var(--muted); cursor:pointer; transition:all .15s; display:flex; align-items:center; gap:7px; }
-.btn-icon:hover { border-color:var(--blue); color:var(--blue); background:white; }
-.btn-icon.blue { background:var(--blue); color:white; border-color:var(--blue); }
-.btn-icon.blue:hover { background:#0f2540; color:white; }
-.btn-icon.red { background:var(--red); color:white; border-color:var(--red); }
-.btn-icon.red:hover { background:#a00a24; }
-.ov-table-wrap { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); overflow:hidden; box-shadow:var(--shadow); }
-.ov-table { width:100%; border-collapse:collapse; font-size:13px; }
-.ov-table thead tr { background:var(--blue); }
-.ov-table th { padding:13px 16px; text-align:left; font-family:'Barlow Condensed',sans-serif; font-size:13px; font-weight:700; color:rgba(255,255,255,.8); text-transform:uppercase; letter-spacing:.08em; white-space:nowrap; }
-.ov-table tbody tr { border-bottom:1px solid var(--border); transition:background .1s; }
-.ov-table tbody tr:last-child { border-bottom:none; }
-.ov-table tbody tr:hover { background:#f5f7fc; }
-.ov-table tbody tr:nth-child(even) { background:#fafbfd; }
-.ov-table tbody tr:nth-child(even):hover { background:#f5f7fc; }
-.ov-table tbody tr.row-yellow { background:#fffbee !important; }
-.ov-table tbody tr.row-yellow:hover { background:#fff5d6 !important; }
-.ov-table tbody tr.row-red { background:#fff5f5 !important; }
-.ov-table tbody tr.row-red:hover { background:#ffe8e8 !important; }
-.ov-table td { padding:13px 16px; vertical-align:middle; }
-.td-name { font-weight:700; color:var(--blue); }
-.pill { display:inline-flex; align-items:center; gap:4px; font-size:11px; font-weight:700; border-radius:5px; padding:3px 9px; border:1.5px solid; white-space:nowrap; }
-.pill.yes    { background:#eaf7ef; color:var(--green); border-color:#a8dfc0; }
-.pill.no     { background:#fdf0f2; color:var(--red);   border-color:#f5b3be; }
-.pill.green  { background:#eaf7ef; color:var(--green); border-color:#a8dfc0; }
-.pill.yellow { background:var(--amber-bg); color:var(--amber); border-color:var(--amber-border); }
-.pill.red    { background:#fdf0f2; color:var(--red); border-color:#f5b3be; }
-.empty-ov { text-align:center; padding:60px 20px; color:var(--dim); font-size:15px; }
-mark { background:rgba(200,16,46,0.12); color:var(--red); border-radius:2px; padding:0 2px; }
+.match-meta {
+  font-size: 13px;
+  color: var(--muted);
+  margin-top: 4px;
+}
 
-.toast { position:fixed; bottom:32px; left:50%; transform:translateX(-50%) translateY(80px); color:white; padding:14px 28px; border-radius:12px; font-size:15px; font-weight:600; box-shadow:0 8px 32px rgba(0,0,0,0.2); transition:transform .3s cubic-bezier(.34,1.56,.64,1); z-index:999; white-space:nowrap; }
-.toast.show { transform:translateX(-50%) translateY(0); }
+.match-status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
 
-/* ── Driver detail modal ── */
-.modal-overlay { position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(15,28,46,0.5); z-index:200; display:none; align-items:center; justify-content:center; padding:20px; }
-.modal-overlay.open { display:flex; animation:fadeIn .2s ease; }
-@keyframes fadeIn { from{opacity:0} to{opacity:1} }
-.modal { background:var(--surface); border-radius:20px; width:100%; max-width:640px; max-height:90vh; overflow-y:auto; box-shadow:0 20px 60px rgba(15,28,46,0.3); animation:slideUp .25s cubic-bezier(.34,1.56,.64,1); }
-@keyframes slideUp { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:translateY(0)} }
-.modal-header { padding:24px 28px 20px; border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; }
-.modal-title { font-family:'Barlow Condensed',sans-serif; font-size:22px; font-weight:800; color:var(--blue); text-transform:uppercase; }
-.modal-close { background:none; border:none; font-size:20px; cursor:pointer; color:var(--muted); padding:4px 8px; border-radius:6px; transition:all .15s; }
-.modal-close:hover { color:var(--text); background:var(--bg); }
-.modal-body { padding:24px 28px; }
-.modal-grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:20px; }
-.modal-group { display:flex; flex-direction:column; gap:6px; }
-.modal-group.full { grid-column:1/-1; }
-.modal-label { font-size:11px; font-weight:700; color:var(--muted); text-transform:uppercase; letter-spacing:.08em; }
-.modal-input { background:var(--bg); border:1.5px solid var(--border); border-radius:9px; padding:10px 14px; font-family:'Barlow',sans-serif; font-size:14px; font-weight:500; color:var(--text); outline:none; transition:all .15s; }
-.modal-input:focus { border-color:var(--blue); background:white; }
-.modal-footer { padding:16px 28px 24px; display:flex; gap:10px; justify-content:flex-end; }
-.btn-save { background:var(--blue); color:white; border:none; border-radius:10px; padding:12px 28px; font-family:'Barlow',sans-serif; font-size:14px; font-weight:700; cursor:pointer; transition:all .15s; text-transform:uppercase; letter-spacing:.05em; }
-.btn-save:hover:not(:disabled) { background:#2a5a1e; }
-.btn-save:disabled { background:var(--muted); cursor:not-allowed; }
-.btn-cancel { background:var(--bg); border:1.5px solid var(--border); border-radius:10px; padding:12px 20px; font-family:'Barlow',sans-serif; font-size:14px; font-weight:600; color:var(--muted); cursor:pointer; transition:all .15s; }
-.btn-cancel:hover { border-color:var(--red); color:var(--red); }
-.modal-status-bar { padding:12px 16px; border-radius:10px; font-size:13px; font-weight:600; margin-bottom:16px; }
-.modal-status-bar.green  { background:#eaf7ef; color:var(--green); }
-.modal-status-bar.yellow { background:var(--amber-bg); color:var(--amber); }
-.modal-status-bar.red    { background:#fdf0f2; color:var(--red); }
+.status-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.status-dot.green {
+  background: var(--green);
+}
+
+.status-dot.red {
+  background: var(--red);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   REGISTER FORM
+   ═══════════════════════════════════════════════════════════════════════════ */
+.reg-page {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 40px 24px 80px;
+}
+
+.page-title {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 36px;
+  font-weight: 800;
+  color: var(--blue);
+  text-transform: uppercase;
+  margin-bottom: 6px;
+}
+
+.page-sub {
+  font-size: 15px;
+  color: var(--muted);
+  margin-bottom: 32px;
+  line-height: 1.6;
+}
+
+.form-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 32px;
+  box-shadow: var(--shadow);
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.form-group.full {
+  grid-column: 1/-1;
+}
+
+label {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: .08em;
+}
+
+input[type=text],
+input[type=date] {
+  background: var(--bg);
+  border: 1.5px solid var(--border);
+  border-radius: 10px;
+  padding: 12px 16px;
+  font-family: 'Barlow', sans-serif;
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--text);
+  outline: none;
+  transition: all .15s;
+}
+
+input[type=text]:focus,
+input[type=date]:focus {
+  border-color: var(--blue);
+  background: white;
+  box-shadow: 0 0 0 3px rgba(26,58,92,0.08);
+}
+
+.toggle-group {
+  display: flex;
+  gap: 8px;
+}
+
+.toggle-btn {
+  flex: 1;
+  background: var(--bg);
+  border: 1.5px solid var(--border);
+  border-radius: 9px;
+  padding: 11px;
+  font-family: 'Barlow', sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all .15s;
+  text-align: center;
+  color: var(--muted);
+}
+
+.toggle-btn.active-yes {
+  background: #eaf7ef;
+  color: var(--green);
+  border-color: var(--green);
+}
+
+.toggle-btn.active-no {
+  background: #fdf0f2;
+  color: var(--red);
+  border-color: var(--red);
+}
+
+.upload-area {
+  border: 2px dashed var(--border);
+  border-radius: 10px;
+  padding: 24px;
+  text-align: center;
+  cursor: pointer;
+  transition: all .15s;
+  background: var(--bg);
+}
+
+.upload-area:hover {
+  border-color: var(--blue);
+  background: white;
+}
+
+.upload-area.has-file {
+  border-color: var(--green);
+  background: #eaf7ef;
+}
+
+#doc-input {
+  display: none;
+}
+
+.form-divider {
+  height: 1px;
+  background: var(--border);
+  grid-column: 1/-1;
+  margin: 8px 0;
+}
+
+.btn-submit {
+  width: 100%;
+  background: var(--blue);
+  color: white;
+  border: none;
+  border-radius: 10px;
+  padding: 16px;
+  font-family: 'Barlow', sans-serif;
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all .2s;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+
+.btn-submit:hover:not(:disabled) {
+  background: #2a5a1e;
+  transform: translateY(-1px);
+}
+
+.btn-submit:disabled {
+  background: var(--muted);
+  cursor: not-allowed;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   OVERVIEW / TABLE VIEW
+   ═══════════════════════════════════════════════════════════════════════════ */
+.ov-page {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 40px 24px 80px;
+}
+
+.ov-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.ov-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+}
+
+.ov-search-wrap {
+  flex: 1;
+  min-width: 200px;
+  position: relative;
+}
+
+.ov-search-wrap svg {
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--dim);
+  pointer-events: none;
+}
+
+#ov-search {
+  width: 100%;
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  border-radius: 10px;
+  padding: 11px 14px 11px 42px;
+  font-family: 'Barlow', sans-serif;
+  font-size: 15px;
+  color: var(--text);
+  outline: none;
+  transition: all .15s;
+}
+
+#ov-search:focus {
+  border-color: var(--blue);
+}
+
+#ov-search::placeholder {
+  color: var(--dim);
+}
+
+.btn-icon {
+  background: var(--bg);
+  border: 1.5px solid var(--border);
+  border-radius: 9px;
+  padding: 10px 16px;
+  font-family: 'Barlow', sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--muted);
+  cursor: pointer;
+  transition: all .15s;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  white-space: nowrap;
+}
+
+.btn-icon:hover {
+  border-color: var(--blue);
+  color: var(--blue);
+  background: white;
+  transform: translateY(-1px);
+}
+
+.btn-icon.blue {
+  background: var(--blue);
+  color: white;
+  border-color: var(--blue);
+}
+
+.btn-icon.blue:hover {
+  background: #2a5a1e;
+  color: white;
+}
+
+.btn-icon.red {
+  background: var(--red);
+  color: white;
+  border-color: var(--red);
+}
+
+.btn-icon.red:hover {
+  background: #a00a24;
+  transform: translateY(-1px);
+}
+
+.ov-table-wrap {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+  box-shadow: var(--shadow);
+}
+
+.ov-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.ov-table thead tr {
+  background: var(--blue);
+}
+
+.ov-table th {
+  padding: 13px 16px;
+  text-align: left;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  color: rgba(255,255,255,.8);
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  white-space: nowrap;
+}
+
+.ov-table tbody tr {
+  border-bottom: 1px solid var(--border);
+  transition: background .1s;
+}
+
+.ov-table tbody tr:last-child {
+  border-bottom: none;
+}
+
+.ov-table tbody tr:hover {
+  background: #f5f7fc;
+}
+
+.ov-table tbody tr:nth-child(even) {
+  background: #fafbfd;
+}
+
+.ov-table tbody tr:nth-child(even):hover {
+  background: #f5f7fc;
+}
+
+.ov-table tbody tr.row-red {
+  background: #fff5f5 !important;
+}
+
+.ov-table tbody tr.row-red:hover {
+  background: #ffe8e8 !important;
+}
+
+.ov-table td {
+  padding: 13px 16px;
+  vertical-align: middle;
+}
+
+.td-name {
+  font-weight: 700;
+  color: var(--blue);
+}
+
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  font-weight: 700;
+  border-radius: 5px;
+  padding: 3px 9px;
+  border: 1.5px solid;
+  white-space: nowrap;
+}
+
+.pill.yes {
+  background: #eaf7ef;
+  color: var(--green);
+  border-color: #a8dfc0;
+}
+
+.pill.no {
+  background: #fdf0f2;
+  color: var(--red);
+  border-color: #f5b3be;
+}
+
+.pill.green {
+  background: #eaf7ef;
+  color: var(--green);
+  border-color: #a8dfc0;
+}
+
+.pill.red {
+  background: #fdf0f2;
+  color: var(--red);
+  border-color: #f5b3be;
+}
+
+.empty-ov {
+  text-align: center;
+  padding: 60px 20px;
+  color: var(--dim);
+  font-size: 15px;
+}
+
+mark {
+  background: rgba(200,16,46,0.12);
+  color: var(--red);
+  border-radius: 2px;
+  padding: 0 2px;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   TOAST NOTIFICATIONS
+   ═══════════════════════════════════════════════════════════════════════════ */
+.toast {
+  position: fixed;
+  bottom: 32px;
+  left: 50%;
+  transform: translateX(-50%) translateY(80px);
+  color: white;
+  padding: 14px 28px;
+  border-radius: 12px;
+  font-size: 15px;
+  font-weight: 600;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+  transition: transform .3s cubic-bezier(.34,1.56,.64,1);
+  z-index: 999;
+  max-width: 90%;
+  text-align: center;
+}
+
+.toast.show {
+  transform: translateX(-50%) translateY(0);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   MODAL / DRIVER DETAIL
+   ═══════════════════════════════════════════════════════════════════════════ */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(15,28,46,0.5);
+  z-index: 200;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.modal-overlay.open {
+  display: flex;
+  animation: fadeIn .2s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.modal {
+  background: var(--surface);
+  border-radius: 20px;
+  width: 100%;
+  max-width: 640px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 20px 60px rgba(15,28,46,0.3);
+  animation: slideUp .25s cubic-bezier(.34,1.56,.64,1);
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.modal-header {
+  padding: 24px 28px 20px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.modal-title {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 22px;
+  font-weight: 800;
+  color: var(--blue);
+  text-transform: uppercase;
+}
+
+.modal-close {
+  background: none;
+  border: none;
+  font-size: 20px;
+  cursor: pointer;
+  color: var(--muted);
+  padding: 4px 8px;
+  border-radius: 6px;
+  transition: all .15s;
+}
+
+.modal-close:hover {
+  color: var(--text);
+  background: var(--bg);
+}
+
+.modal-body {
+  padding: 24px 28px;
+}
+
+.modal-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.modal-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.modal-group.full {
+  grid-column: 1/-1;
+}
+
+.modal-label {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: .08em;
+}
+
+.modal-input {
+  background: var(--bg);
+  border: 1.5px solid var(--border);
+  border-radius: 9px;
+  padding: 10px 14px;
+  font-family: 'Barlow', sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text);
+  outline: none;
+  transition: all .15s;
+}
+
+.modal-input:focus {
+  border-color: var(--blue);
+  background: white;
+}
+
+.modal-footer {
+  padding: 16px 28px 24px;
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+}
+
+.btn-save {
+  background: var(--blue);
+  color: white;
+  border: none;
+  border-radius: 10px;
+  padding: 12px 28px;
+  font-family: 'Barlow', sans-serif;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all .15s;
+  text-transform: uppercase;
+  letter-spacing: .05em;
+}
+
+.btn-save:hover:not(:disabled) {
+  background: #2a5a1e;
+}
+
+.btn-save:disabled {
+  background: var(--muted);
+  cursor: not-allowed;
+}
+
+.btn-cancel {
+  background: var(--bg);
+  border: 1.5px solid var(--border);
+  border-radius: 10px;
+  padding: 12px 20px;
+  font-family: 'Barlow', sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--muted);
+  cursor: pointer;
+  transition: all .15s;
+}
+
+.btn-cancel:hover {
+  border-color: var(--red);
+  color: var(--red);
+}
+
+.modal-status-bar {
+  padding: 12px 16px;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 16px;
+}
+
+.modal-status-bar.green {
+  background: #eaf7ef;
+  color: var(--green);
+}
+
+.modal-status-bar.red {
+  background: #fdf0f2;
+  color: var(--red);
+}
 </style>
 </head>
 <body>
 
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     TOPBAR
+     ═══════════════════════════════════════════════════════════════════════════ -->
 <div class="topbar">
   <div class="logo">Orkla <span>Kumla</span></div>
   <nav class="nav">
     <button class="nav-btn active" onclick="showPage('kiosk',this)">
-      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>Sök
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      Sök
     </button>
     <button class="nav-btn" onclick="showPage('reg',this)">
-      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Registrera
-    </button>
-    <button class="nav-btn" onclick="showPage('warn',this)">
-      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-      Utgår snart
-      <span class="nav-badge" id="warn-badge" style="display:none">0</span>
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      Registrera
     </button>
     <button class="nav-btn" onclick="showPage('ov',this)">
-      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>Översikt
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+      Översikt
     </button>
     <button class="nav-btn" onclick="showPage('notapproved',this)">
       <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
       Ej godkända
-      <span class="nav-badge" id="notapproved-badge" style="display:none;background:#c8102e;color:white">0</span>
+      <span class="nav-badge" id="notapproved-badge" style="display:none">0</span>
     </button>
   </nav>
   <div class="topbar-right">
@@ -231,7 +1177,9 @@ mark { background:rgba(200,16,46,0.12); color:var(--red); border-radius:2px; pad
   </div>
 </div>
 
-<!-- KIOSK -->
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     KIOSK / SEARCH PAGE
+     ═══════════════════════════════════════════════════════════════════════════ -->
 <div class="page active" id="page-kiosk">
   <div class="kiosk">
     <div>
@@ -244,16 +1192,23 @@ mark { background:rgba(200,16,46,0.12); color:var(--red); border-radius:2px; pad
       <button class="btn-primary" onclick="kioskSearch()">Sök</button>
     </div>
     <div class="kiosk-result" id="kiosk-result">
-      <div class="idle-hint"><div class="big">👇</div><p>Skriv ditt namn och tryck Sök</p></div>
+      <div class="idle-hint">
+        <div class="big">👇</div>
+        <p>Skriv ditt namn och tryck Sök</p>
+      </div>
     </div>
   </div>
 </div>
 
-<!-- REGISTRERA -->
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     REGISTER PAGE
+     ═══════════════════════════════════════════════════════════════════════════ -->
 <div class="page" id="page-reg">
   <div class="reg-page">
     <div class="page-title">Registrera chaufför</div>
-    <div class="page-sub">Fyll i uppgifterna och spara — körtillståndet gäller för innevarande år samt nästkommande år.</div>
+    <div class="page-sub">
+      Fyll i uppgifterna och spara. Körtillståndet gäller tills nästa årliga cleanup körs (vanligtvis 1 januari).
+    </div>
     <div class="form-card">
       <div class="form-grid">
         <div class="form-group full">
@@ -272,63 +1227,53 @@ mark { background:rgba(200,16,46,0.12); color:var(--red); border-radius:2px; pad
         <div class="form-group full">
           <label>Körtillstånd godkänt?</label>
           <div class="toggle-group">
-            <button class="toggle-btn active-yes" id="kort-ja"  onclick="setToggle('kort','ja')">✓ Ja</button>
-            <button class="toggle-btn"            id="kort-nej" onclick="setToggle('kort','nej')">✗ Nej</button>
+            <button class="toggle-btn active-yes" id="kort-ja" onclick="setToggle('kort','ja')">✓ Ja</button>
+            <button class="toggle-btn" id="kort-nej" onclick="setToggle('kort','nej')">✗ Nej</button>
           </div>
         </div>
         <div class="form-group full">
           <label>Ladda upp dokument (valfritt)</label>
           <div class="upload-area" id="upload-area" onclick="document.getElementById('doc-input').click()">
             <div style="font-size:28px">📄</div>
-            <div style="font-size:13px;color:var(--muted);margin-top:6px;">Klicka för att ladda upp<br><b style="color:var(--blue)">Utbildningsbevis / Körtillstånd</b></div>
+            <div style="font-size:13px;color:var(--muted);margin-top:6px;">
+              Klicka för att ladda upp<br>
+              <b style="color:var(--blue)">Utbildningsbevis / Körtillstånd</b>
+            </div>
           </div>
           <input type="file" id="doc-input" accept=".pdf,.jpg,.jpeg,.png" onchange="handleDocUpload(this)">
           <div id="doc-name" style="font-size:12px;color:var(--muted);margin-top:6px;"></div>
         </div>
         <div class="form-group full">
-          <button class="btn-submit" id="btn-submit" onclick="registerDriver()">Spara körtillstånd</button>
+          <button class="btn-submit" id="btn-submit" onclick="registerDriver()">
+            Spara körtillstånd
+          </button>
         </div>
       </div>
     </div>
   </div>
 </div>
 
-<!-- UTGÅR SNART -->
-<div class="page" id="page-warn">
-  <div class="warn-page">
-    <div class="page-title">Utgår snart</div>
-    <div class="page-sub">Chaufförer vars körtillstånd går ut inom 30 dagar eller redan har gått ut.</div>
-    <div class="warn-banner">
-      <div class="warn-banner-icon">⚠️</div>
-      <div class="warn-banner-text" id="warn-banner-text">Laddar...</div>
-    </div>
-    <div class="ov-table-wrap">
-      <table class="ov-table">
-        <thead>
-          <tr>
-            <th>Status</th><th>Namn chaufför</th><th>Registrerad</th><th>Går ut</th><th>Tid kvar</th><th>Inregistrerad av</th>
-          </tr>
-        </thead>
-        <tbody id="warn-tbody"></tbody>
-      </table>
-    </div>
-  </div>
-</div>
-
-<!-- EJ GODKÄNDA -->
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     NOT APPROVED PAGE
+     ═══════════════════════════════════════════════════════════════════════════ -->
 <div class="page" id="page-notapproved">
   <div class="ov-page">
     <div class="ov-header">
       <div>
         <div class="page-title">Ej godkända</div>
-        <div class="page-sub">Chaufförer som saknar dokument eller har icke-godkänt svar</div>
+        <div class="page-sub">Chaufförer som saknar dokument eller har icke-godkänt körtillstånd</div>
       </div>
     </div>
     <div class="ov-table-wrap">
       <table class="ov-table">
         <thead>
           <tr>
-            <th>Namn chaufför</th><th>Registrerad</th><th>Inregistrerad av</th><th>Körtillstånd</th><th>Dokument</th><th></th>
+            <th>Namn chaufför</th>
+            <th>Registrerad</th>
+            <th>Inregistrerad av</th>
+            <th>Körtillstånd</th>
+            <th>Dokument</th>
+            <th></th>
           </tr>
         </thead>
         <tbody id="notapproved-tbody"></tbody>
@@ -337,7 +1282,9 @@ mark { background:rgba(200,16,46,0.12); color:var(--red); border-radius:2px; pad
   </div>
 </div>
 
-<!-- ÖVERSIKT -->
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     OVERVIEW PAGE
+     ═══════════════════════════════════════════════════════════════════════════ -->
 <div class="page" id="page-ov">
   <div class="ov-page">
     <div class="ov-header">
@@ -347,13 +1294,16 @@ mark { background:rgba(200,16,46,0.12); color:var(--red); border-radius:2px; pad
       </div>
       <div style="display:flex;gap:10px;flex-wrap:wrap">
         <button class="btn-icon blue" onclick="loadData()">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>Uppdatera
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+          Uppdatera
         </button>
         <button class="btn-icon" onclick="exportCSV()">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>Exportera CSV
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Exportera CSV
         </button>
         <button class="btn-icon red" onclick="cleanupAllDrivers()">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>🗑️ ÅRLIG CLEANUP
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+          🗑️ ÅRLIG CLEANUP
         </button>
       </div>
     </div>
@@ -368,7 +1318,13 @@ mark { background:rgba(200,16,46,0.12); color:var(--red); border-radius:2px; pad
       <table class="ov-table">
         <thead>
           <tr>
-            <th>Status</th><th>Namn chaufför</th><th>Registrerad</th><th>Går ut</th><th>Inregistrerad av</th><th>Körtillstånd</th><th>Dokument</th><th></th>
+            <th>Status</th>
+            <th>Namn chaufför</th>
+            <th>Registrerad</th>
+            <th>Inregistrerad av</th>
+            <th>Körtillstånd</th>
+            <th>Dokument</th>
+            <th></th>
           </tr>
         </thead>
         <tbody id="ov-tbody"></tbody>
@@ -377,7 +1333,9 @@ mark { background:rgba(200,16,46,0.12); color:var(--red); border-radius:2px; pad
   </div>
 </div>
 
-<!-- DRIVER DETAIL MODAL -->
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     DRIVER DETAIL MODAL
+     ═══════════════════════════════════════════════════════════════════════════ -->
 <div class="modal-overlay" id="driver-modal" onclick="if(event.target===this)closeModal()">
   <div class="modal">
     <div class="modal-header">
@@ -403,7 +1361,7 @@ mark { background:rgba(200,16,46,0.12); color:var(--red); border-radius:2px; pad
         <div class="modal-group full">
           <div class="modal-label">Körtillstånd godkänt?</div>
           <div class="toggle-group">
-            <button class="toggle-btn" id="modal-kort-ja"  onclick="setModalToggle('kort','ja')">✓ Ja</button>
+            <button class="toggle-btn" id="modal-kort-ja" onclick="setModalToggle('kort','ja')">✓ Ja</button>
             <button class="toggle-btn" id="modal-kort-nej" onclick="setModalToggle('kort','nej')">✗ Nej</button>
           </div>
         </div>
@@ -431,590 +1389,969 @@ mark { background:rgba(200,16,46,0.12); color:var(--red); border-radius:2px; pad
 <div class="toast" id="toast"></div>
 
 <script>
-// ╔══════════════════════════════════════════════════════════════╗
-// ║   Körtillstånd App — Orkla Kumla                            ║
-// ║   Built by WildDaggerr (Linus)                              ║
-// ║   v1.2 MED ÅRLIG CLEANUP                                    ║
-// ╚══════════════════════════════════════════════════════════════╝
+/* ═══════════════════════════════════════════════════════════════════════════
+   KÖRTILLSTÅND APP - ORKLA KUMLA
+   Version 2.0 - Simplified & Cleaned
+   Built by WildDaggerr (Linus)
+   
+   OVERVIEW:
+   - Manages truck driver permits for Orkla Kumla logistics
+   - Stores data in SharePoint list + document library
+   - Annual cleanup system (all drivers deleted at year-end)
+   - Simple status: Approved or Not Approved
+   ═══════════════════════════════════════════════════════════════════════════ */
 
+// ═══════════════════════════════════════════════════════════════════════════
+// CONFIGURATION & CONSTANTS
+// ═══════════════════════════════════════════════════════════════════════════
+
+// Power Automate flow URLs for CRUD operations
 const PA_WRITE_URL = 'https://a2abda53c55aef0997be14a2c7a027.5c.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/6f2956fd047649228804053fd9fdd371/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=Gq2uS6nsElHF0s5diQdWs9bIuSMUmEI8t5iCMIgCvI0';
-const PA_READ_URL  = 'https://a2abda53c55aef0997be14a2c7a027.5c.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/7e2efb813e6a47ddaa9d6b0d69ebaf33/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=XBCoUO_UhustWEa1y2k8WPMzXC_dxmPzqg0YVAZHHu0';
+const PA_READ_URL = 'https://a2abda53c55aef0997be14a2c7a027.5c.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/7e2efb813e6a47ddaa9d6b0d69ebaf33/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=XBCoUO_UhustWEa1y2k8WPMzXC_dxmPzqg0YVAZHHu0';
 
+// ═══════════════════════════════════════════════════════════════════════════
+// GLOBAL STATE
+// ═══════════════════════════════════════════════════════════════════════════
+
+// Main database array - holds all driver records
 let db = [];
-let toggleState = { kort: 'ja' };
-let validityMode = 'year';
-let docData = null;
 
-function getExpDate(dateStr, validity) {
-  const reg = new Date(dateStr);
-  const exp = new Date(reg);
-  if (validity === '24h') {
-    exp.setHours(exp.getHours() + 24);
-  } else {
-    exp.setFullYear(exp.getFullYear() + 1);
-  }
-  return exp;
+// Form state for registration
+let toggleState = { kort: 'ja' };  // körtillstånd toggle state
+let docData = null;                // uploaded document base64 data
+
+// Modal state for editing
+let modalDocData = null;
+let modalToggleState = { kort: 'ja' };
+
+// ═══════════════════════════════════════════════════════════════════════════
+// UTILITY FUNCTIONS / Hjälpfunktioner
+// ═══════════════════════════════════════════════════════════════════════════
+
+/**
+ * Escape HTML special characters to prevent XSS
+ * @param {string} s - String to escape
+ * @returns {string} - Escaped string
+ */
+function esc(s) {
+  return String(s || '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
 }
 
-function getStatus(r) {
-  if (!r) return 'red';
-  const dateStr = typeof r === 'string' ? r : r.date;
-  const validity = typeof r === 'object' ? (r.validity || 'year') : 'year';
-  if (!dateStr) return 'red';
-  const now = new Date();
-  const exp = getExpDate(dateStr, validity);
-  const daysLeft = Math.floor((exp - now) / (1000 * 60 * 60 * 24));
-  const hoursLeft = Math.floor((exp - now) / (1000 * 60 * 60));
-  if (validity === '24h') {
-    if (hoursLeft < 0) return 'expired';
-    if (hoursLeft <= 4) return 'yellow';
-  } else {
-    if (daysLeft < 0) return 'expired';
-    if (daysLeft <= 30) return 'yellow';
+/**
+ * Highlight search query in text
+ * @param {string} text - Text to highlight in
+ * @param {string} query - Query to highlight
+ * @returns {string} - HTML with <mark> tags
+ */
+function hl(text, query) {
+  if (!query) return text;
+  const escapedQuery = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  return text.replace(new RegExp(`(${escapedQuery})`, 'gi'), '<mark>$1</mark>');
+}
+
+/**
+ * Show toast notification
+ * @param {string} msg - Message to show
+ * @param {string} bg - Background color (default green)
+ */
+function showToast(msg, bg = '#1a7a3c') {
+  console.log(`[Toast] ${msg}`);
+  const toast = document.getElementById('toast');
+  toast.textContent = msg;
+  toast.style.background = bg;
+  toast.classList.add('show');
+  setTimeout(() => toast.classList.remove('show'), 3500);
+}
+
+/**
+ * Update clock display every second
+ */
+function tick() {
+  const clock = document.getElementById('clock');
+  clock.textContent = new Date().toLocaleTimeString('sv-SE', {
+    hour: '2-digit',
+    minute: '2-digit'
+  });
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// STATUS LOGIC / Statuslogik
+// ═══════════════════════════════════════════════════════════════════════════
+
+/**
+ * Calculate driver status
+ * STATUS RULES (Simplified for V2):
+ * - Green/Approved: Has document AND körtillstånd = 'ja'
+ * - Red/Not Approved: Missing document OR körtillstånd = 'nej'
+ * - No expiry warnings (all deleted at year-end via cleanup)
+ * 
+ * @param {object} driver - Driver record
+ * @returns {string} - Status: 'green' or 'red'
+ */
+function getStatus(driver) {
+  if (!driver) {
+    console.warn('[getStatus] No driver provided');
+    return 'red';
   }
-  if (typeof r === 'object') {
-    if (!r.doc || r.kort !== 'ja') return 'not-approved';
+  
+  // Not approved if missing document or körtillstånd is 'nej'
+  if (!driver.doc || driver.kort !== 'ja') {
+    console.log(`[getStatus] ${driver.name}: Not approved (doc: ${!!driver.doc}, kort: ${driver.kort})`);
+    return 'red';
   }
+  
+  console.log(`[getStatus] ${driver.name}: Approved`);
   return 'green';
 }
 
-function getDaysLeft(r) {
-  const dateStr = typeof r === 'string' ? r : r.date;
-  const validity = typeof r === 'object' ? (r.validity || 'year') : 'year';
-  if (!dateStr) return null;
-  const exp = getExpDate(dateStr, validity);
-  if (validity === '24h') {
-    return Math.floor((exp - new Date()) / (1000 * 60 * 60));
+/**
+ * Generate status pill HTML
+ * @param {string} status - Status string ('green' or 'red')
+ * @returns {string} - HTML for status pill
+ */
+function statusPill(status) {
+  if (status === 'green') {
+    return '<span class="pill green">✓ Godkänd</span>';
   }
-  return Math.floor((exp - new Date()) / (1000 * 60 * 60 * 24));
+  return '<span class="pill red">✗ Ej godkänd</span>';
 }
 
-function getExpiry(r) {
-  const dateStr = typeof r === 'string' ? r : r.date;
-  const validity = typeof r === 'object' ? (r.validity || 'year') : 'year';
-  if (!dateStr) return '—';
-  const exp = getExpDate(dateStr, validity);
-  if (validity === '24h') {
-    return exp.toLocaleString('sv-SE', {hour:'2-digit',minute:'2-digit', day:'2-digit',month:'2-digit'});
-  }
-  return exp.toLocaleDateString('sv-SE');
+/**
+ * Generate yes/no pill HTML
+ * @param {string} value - 'ja' or 'nej'
+ * @returns {string} - HTML for pill
+ */
+function pill(value) {
+  return value === 'ja'
+    ? '<span class="pill yes">✓ Ja</span>'
+    : '<span class="pill no">✗ Nej</span>';
 }
 
-function tick() {
-  document.getElementById('clock').textContent = new Date().toLocaleTimeString('sv-SE', {hour:'2-digit',minute:'2-digit'});
-}
-tick(); 
-setInterval(tick, 1000);
+// ═══════════════════════════════════════════════════════════════════════════
+// DATA MANAGEMENT / Datahantering
+// ═══════════════════════════════════════════════════════════════════════════
 
-function showPage(id, btn) {
-  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-  document.getElementById('page-' + id).classList.add('active');
-  btn.classList.add('active');
-  if (id === 'ov')   { loadData(); }
-  if (id === 'warn') { renderWarn(); }
-  if (id === 'notapproved') { renderNotApproved(); }
-  if (id === 'kiosk') resetKiosk();
-}
-
-async function loadData() {
-  setSyncStatus('syncing','Hämtar…');
-  try {
-    const res  = await fetch(PA_READ_URL, {
-      method: 'POST',
-      headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({ action: 'read' })
-    });
-    const rows = await res.json();
-    db = rows.map(r => ({
-      id:    r['ID']||r['Id']||'',
-      name:  r['Chauffor']||'',
-      date:  r['Datum'] ? r['Datum'].slice(0,10) : '',
-      by:    r['Inregistrerad']||'',
-      regl:  r['Regler'] ? 'ja' : 'nej',
-      kort:  r['Kortillstand'] ? 'ja' : 'nej',
-      doc:   r['Dokument']||'',
-      validity: r['Validity']||'year',
-      created: r['Created']||''
-    })).filter(r => r.name);
-
-    document.getElementById('db-count').textContent = `${db.length} registrerade`;
-    setSyncStatus('ok','Synkad');
-    updateWarnBadge();
-    renderOverview(document.getElementById('ov-search')?.value||'');
-    renderWarn();
-    renderNotApproved();
-  } catch(e) {
-    setSyncStatus('error','Anslutningsfel');
-    console.error('Load error:', e);
-  }
-}
-
+/**
+ * Update sync status indicator
+ * @param {string} state - 'syncing', 'ok', or 'error'
+ * @param {string} text - Status text to display
+ */
 function setSyncStatus(state, text) {
   const dot = document.getElementById('sync-dot');
-  dot.className = 'sync-dot' + (state==='syncing'?' syncing':state==='error'?' error':'');
+  dot.className = 'sync-dot' + (state === 'syncing' ? ' syncing' : state === 'error' ? ' error' : '');
   document.getElementById('sync-text').textContent = text;
+  console.log(`[Sync] ${state}: ${text}`);
 }
 
-function updateWarnBadge() {
-  const warnCount = db.filter(r => getStatus(r) === 'yellow').length;
-  const warnBadge = document.getElementById('warn-badge');
-  if (warnCount > 0) { 
-    warnBadge.textContent = warnCount; 
-    warnBadge.style.display = 'inline'; 
-  } else { 
-    warnBadge.style.display = 'none'; 
+/**
+ * Load all drivers from SharePoint via Power Automate
+ * Fetches data from PA_READ_URL and updates local db array
+ */
+async function loadData() {
+  console.log('[loadData] Starting data fetch...');
+  setSyncStatus('syncing', 'Hämtar…');
+  
+  try {
+    const response = await fetch(PA_READ_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'read' })
+    });
+    
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}`);
+    }
+    
+    const rows = await response.json();
+    console.log(`[loadData] Received ${rows.length} rows from SharePoint`);
+    
+    // Map SharePoint columns to local structure
+    db = rows.map(r => ({
+      id: r['ID'] || r['Id'] || '',
+      name: r['Chauffor'] || '',
+      date: r['Datum'] ? r['Datum'].slice(0, 10) : '',
+      by: r['Inregistrerad'] || '',
+      kort: r['Kortillstand'] ? 'ja' : 'nej',
+      doc: r['Dokument'] || ''
+    })).filter(r => r.name); // Filter out empty names
+    
+    console.log(`[loadData] Processed ${db.length} valid drivers`);
+    
+    // Update UI
+    document.getElementById('db-count').textContent = `${db.length} registrerade`;
+    updateBadges();
+    renderOverview(document.getElementById('ov-search')?.value || '');
+    renderNotApproved();
+    
+    setSyncStatus('ok', 'Synkad');
+  } catch (error) {
+    console.error('[loadData] Error:', error);
+    setSyncStatus('error', 'Anslutningsfel');
+    showToast('⚠ Kunde inte hämta data från SharePoint', '#c8102e');
   }
-  const naCount = db.filter(r => getStatus(r) === 'not-approved').length;
-  const naBadge = document.getElementById('notapproved-badge');
-  if (naBadge) {
-    if (naCount > 0) { 
-      naBadge.textContent = naCount; 
-      naBadge.style.display = 'inline'; 
-    } else { 
-      naBadge.style.display = 'none'; 
+}
+
+/**
+ * Update badge counts in navigation
+ */
+function updateBadges() {
+  // Count not approved drivers
+  const notApprovedCount = db.filter(r => getStatus(r) === 'red').length;
+  const badge = document.getElementById('notapproved-badge');
+  
+  if (notApprovedCount > 0) {
+    badge.textContent = notApprovedCount;
+    badge.style.display = 'inline';
+  } else {
+    badge.style.display = 'none';
+  }
+  
+  console.log(`[updateBadges] Not approved: ${notApprovedCount}`);
+}
+
+/**
+ * Delete a driver from SharePoint
+ * @param {string} id - Driver ID
+ * @param {string} name - Driver name (for confirmation)
+ */
+async function deleteDriver(id, name) {
+  if (!confirm(`Är du säker på att du vill ta bort ${name}?\n\nDetta kan inte ångras.`)) {
+    console.log(`[deleteDriver] Deletion cancelled by user`);
+    return;
+  }
+  
+  console.log(`[deleteDriver] Deleting driver: ${name} (ID: ${id})`);
+  
+  try {
+    const response = await fetch(PA_WRITE_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'delete', id: id })
+    });
+    
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}`);
+    }
+    
+    console.log(`[deleteDriver] Successfully deleted ${name}`);
+    showToast(`✓ ${name} har tagits bort`);
+    await loadData();
+    
+    // Reset kiosk if on that page
+    if (document.getElementById('page-kiosk').classList.contains('active')) {
+      resetKiosk();
+    }
+  } catch (error) {
+    console.error('[deleteDriver] Error:', error);
+    showToast('⚠ Fel vid borttagning: ' + error.message, '#c8102e');
+  }
+}
+
+/**
+ * Annual cleanup - Delete ALL drivers
+ * This is the main cleanup function to be run once per year (typically Jan 1st)
+ * Includes triple-confirmation to prevent accidental deletion
+ */
+async function cleanupAllDrivers() {
+  console.log('[cleanupAllDrivers] Cleanup initiated');
+  
+  // Triple confirmation for safety
+  if (!confirm('⚠️ VARNING!\n\nDetta kommer radera ALLA chaufförer och deras dokument från databasen.\n\nÄr du helt säker?')) {
+    console.log('[cleanupAllDrivers] Cancelled at step 1');
+    return;
+  }
+  
+  if (!confirm('⚠️ SISTA CHANSEN!\n\nDetta går INTE att ångra!\n\nAlla körtillstånd kommer raderas permanent.\n\nKlicka OK för att fortsätta.')) {
+    console.log('[cleanupAllDrivers] Cancelled at step 2');
+    return;
+  }
+  
+  const finalConfirm = prompt('Skriv "RADERA ALLT" (stora bokstäver) för att bekräfta:');
+  if (finalConfirm !== 'RADERA ALLT') {
+    console.log('[cleanupAllDrivers] Cancelled at step 3 (incorrect text)');
+    showToast('❌ Radering avbruten', '#6b7a99');
+    return;
+  }
+  
+  console.log(`[cleanupAllDrivers] Confirmed. Starting deletion of ${db.length} drivers...`);
+  showToast('🗑️ Årlig cleanup påbörjad... Detta kan ta flera minuter.', '#d48000');
+  
+  let deleted = 0;
+  let failed = 0;
+  const total = db.length;
+  const startTime = Date.now();
+  
+  for (const driver of db) {
+    try {
+      console.log(`[cleanupAllDrivers] Deleting ${driver.name} (${deleted + 1}/${total})`);
+      
+      const response = await fetch(PA_WRITE_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'delete', id: driver.id })
+      });
+      
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}`);
+      }
+      
+      deleted++;
+      
+      // Show progress every 5 drivers
+      if (deleted % 5 === 0 || deleted === total) {
+        showToast(`Raderar ${deleted} av ${total}...`, '#d48000');
+      }
+      
+      // Small delay to avoid overwhelming Power Automate
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
+    } catch (error) {
+      failed++;
+      console.error(`[cleanupAllDrivers] Failed to delete ${driver.name}:`, error);
     }
   }
+  
+  const duration = ((Date.now() - startTime) / 1000).toFixed(1);
+  console.log(`[cleanupAllDrivers] Completed in ${duration}s. Deleted: ${deleted}, Failed: ${failed}`);
+  
+  showToast(
+    `✓ Årlig cleanup genomförd!\n\n${deleted} chaufförer raderade${failed > 0 ? `\n${failed} misslyckades` : ''}`,
+    '#1a7a3c'
+  );
+  
+  await loadData();
 }
 
+/**
+ * Export all drivers to CSV file
+ */
+function exportCSV() {
+  console.log('[exportCSV] Generating CSV...');
+  
+  const headers = ['Namn chaufför', 'Datum', 'Inregistrerad av', 'Körtillstånd', 'Status'];
+  const rows = db.map(driver => [
+    driver.name,
+    driver.date,
+    driver.by,
+    driver.kort,
+    getStatus(driver)
+  ]);
+  
+  const csv = [headers, ...rows]
+    .map(row => row.map(value => `"${value}"`).join(','))
+    .join('\n');
+  
+  const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+  const link = document.createElement('a');
+  link.href = URL.createObjectURL(blob);
+  link.download = `kortillstand_${new Date().toISOString().slice(0, 10)}.csv`;
+  link.click();
+  
+  console.log('[exportCSV] CSV downloaded');
+  showToast('✓ CSV exporterad!');
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// PAGE NAVIGATION / Sidnavigering
+// ═══════════════════════════════════════════════════════════════════════════
+
+/**
+ * Show a specific page and update navigation
+ * @param {string} id - Page ID (kiosk, reg, ov, notapproved)
+ * @param {HTMLElement} btn - Navigation button that was clicked
+ */
+function showPage(id, btn) {
+  console.log(`[showPage] Navigating to: ${id}`);
+  
+  // Hide all pages
+  document.querySelectorAll('.page').forEach(page => page.classList.remove('active'));
+  
+  // Deactivate all nav buttons
+  document.querySelectorAll('.nav-btn').forEach(button => button.classList.remove('active'));
+  
+  // Show selected page
+  document.getElementById('page-' + id).classList.add('active');
+  btn.classList.add('active');
+  
+  // Page-specific actions
+  if (id === 'ov') {
+    loadData();
+  } else if (id === 'notapproved') {
+    renderNotApproved();
+  } else if (id === 'kiosk') {
+    resetKiosk();
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// KIOSK / SEARCH FUNCTIONALITY / Kiosk-funktioner
+// ═══════════════════════════════════════════════════════════════════════════
+
+/**
+ * Search for a driver by name in kiosk mode
+ */
 function kioskSearch() {
   const query = document.getElementById('k-input').value.trim();
   if (!query) return;
+  
+  console.log(`[kioskSearch] Searching for: ${query}`);
+  
   const lower = query.toLowerCase();
   const matches = db.filter(r => r.name.toLowerCase().includes(lower));
-  const area = document.getElementById('kiosk-result');
-
+  const resultArea = document.getElementById('kiosk-result');
+  
+  console.log(`[kioskSearch] Found ${matches.length} matches`);
+  
   if (matches.length === 0) {
-    area.innerHTML = `
+    // No matches found
+    resultArea.innerHTML = `
       <div class="result-card">
         <div class="rc-header red">
           <div class="rc-icon">❌</div>
-          <div><div class="rc-title">Inget körtillstånd</div><div class="rc-sub">${esc(query)}</div></div>
+          <div>
+            <div class="rc-title">Inget körtillstånd</div>
+            <div class="rc-sub">${esc(query)}</div>
+          </div>
         </div>
         <div class="rc-body not-found-msg">
           <p>Vi har inget registrerat körtillstånd för <strong>${esc(query)}</strong>.</p>
           <p>Vänligen kontakta personal.</p>
           <button class="btn-reset" onclick="resetKiosk()">Försök igen</button>
         </div>
-      </div>`;
+      </div>
+    `;
   } else if (matches.length === 1) {
+    // Single match - show full result
     showDriverResult(matches[0]);
   } else {
-    area.innerHTML = `
+    // Multiple matches - show selection list
+    resultArea.innerHTML = `
       <div class="result-card">
         <div class="rc-header" style="background:var(--blue)">
           <div class="rc-icon">👥</div>
-          <div><div class="rc-title">Flera träffar</div><div class="rc-sub">Välj rätt person nedan</div></div>
+          <div>
+            <div class="rc-title">Flera träffar</div>
+            <div class="rc-sub">Välj rätt person nedan</div>
+          </div>
         </div>
         <div class="rc-body">
-          ${matches.map((r,i) => {
-            const st = getStatus(r);
-            return `<div class="match-list-item" onclick="showDriverResult(db.filter(x=>x.name.toLowerCase().includes('${lower.replace(/'/g,"\\'")}'))[${i}])">
-              <div>
-                <div class="match-name">${esc(r.name)}</div>
-                <div class="match-meta">Registrerad: ${esc(r.date)} · av ${esc(r.by)}</div>
+          ${matches.map((driver, index) => {
+            const status = getStatus(driver);
+            const escapedQuery = lower.replace(/'/g, "\\'");
+            return `
+              <div class="match-list-item" onclick="showDriverResult(db.filter(x=>x.name.toLowerCase().includes('${escapedQuery}'))[${index}])">
+                <div>
+                  <div class="match-name">${esc(driver.name)}</div>
+                  <div class="match-meta">Registrerad: ${esc(driver.date)} · av ${esc(driver.by)}</div>
+                </div>
+                <div class="match-status">
+                  <div class="status-dot ${status}"></div>
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="9 18 15 12 9 6"/>
+                  </svg>
+                </div>
               </div>
-              <div class="match-status">
-                <div class="status-dot ${st}"></div>
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
-              </div>
-            </div>`;
+            `;
           }).join('')}
           <button class="btn-reset" onclick="resetKiosk()">Ny sökning</button>
         </div>
-      </div>`;
+      </div>
+    `;
   }
 }
 
-function showDriverResult(match) {
-  const area = document.getElementById('kiosk-result');
-  const status = getStatus(match);
-  const days   = getDaysLeft(match);
-  const expiry = getExpiry(match);
-
+/**
+ * Display detailed driver result in kiosk
+ * @param {object} driver - Driver record to display
+ */
+function showDriverResult(driver) {
+  console.log(`[showDriverResult] Showing result for: ${driver.name}`);
+  
+  const status = getStatus(driver);
+  const resultArea = document.getElementById('kiosk-result');
+  
+  // Determine header style and text based on status
   let headerClass, icon, title, sub;
   if (status === 'green') {
-    headerClass = 'green'; icon = '✅';
-    title = 'Körtillstånd godkänt'; sub = esc(match.name);
-  } else if (status === 'yellow') {
-    headerClass = 'yellow'; icon = '⚠️';
-    const is24h = match.validity === '24h';
-    title = 'Körtillstånd utgår snart';
-    sub = `${days} ${is24h ? 'timmar' : 'dagar'} kvar — ${esc(match.name)}`;
-  } else if (status === 'expired') {
-    headerClass = 'red'; icon = '❌';
-    title = 'Körtillstånd har gått ut'; sub = esc(match.name);
+    headerClass = 'green';
+    icon = '✅';
+    title = 'Körtillstånd godkänt';
+    sub = esc(driver.name);
   } else {
-    headerClass = 'red'; icon = '❌';
-    title = 'Ej godkänd för truckkörning'; sub = esc(match.name);
+    headerClass = 'red';
+    icon = '❌';
+    title = 'Ej godkänd för truckkörning';
+    sub = esc(driver.name);
   }
-
-  area.innerHTML = `
+  
+  resultArea.innerHTML = `
     <div class="result-card">
       <div class="rc-header ${headerClass}">
         <div class="rc-icon">${icon}</div>
-        <div><div class="rc-title">${title}</div><div class="rc-sub">${sub}</div></div>
+        <div>
+          <div class="rc-title">${title}</div>
+          <div class="rc-sub">${sub}</div>
+        </div>
       </div>
       <div class="rc-body">
         <div class="info-grid">
-          <div class="info-tile"><div class="info-tile-label">Registrerad</div><div class="info-tile-value">${esc(match.date)}</div></div>
-          <div class="info-tile ${status!=='green'?'warn':''}"><div class="info-tile-label">Går ut</div><div class="info-tile-value">${expiry}</div></div>
-          <div class="info-tile"><div class="info-tile-label">Inregistrerad av</div><div class="info-tile-value">${esc(match.by)}</div></div>
-          ${match.doc ? `<div class="info-tile"><div class="info-tile-label">Dokument</div><div class="info-tile-value"><a href="${esc(match.doc)}" target="_blank" style="color:var(--blue);text-decoration:underline">Öppna</a></div></div>` : ''}
+          <div class="info-tile">
+            <div class="info-tile-label">Registrerad</div>
+            <div class="info-tile-value">${esc(driver.date)}</div>
+          </div>
+          <div class="info-tile">
+            <div class="info-tile-label">Inregistrerad av</div>
+            <div class="info-tile-value">${esc(driver.by)}</div>
+          </div>
+          ${driver.doc ? `
+            <div class="info-tile">
+              <div class="info-tile-label">Dokument</div>
+              <div class="info-tile-value">
+                <a href="${esc(driver.doc)}" target="_blank" style="color:var(--blue);text-decoration:underline">
+                  Öppna
+                </a>
+              </div>
+            </div>
+          ` : ''}
         </div>
         <div class="checks">
-          <div class="chk ${match.regl==='ja'?'yes':'no'}">${match.regl==='ja'?'✓':'✗'} Regler delgivna</div>
-          <div class="chk ${match.kort==='ja'?'yes':'no'}">${match.kort==='ja'?'✓':'✗'} Körtillstånd utfärdat</div>
+          <div class="chk ${driver.kort === 'ja' ? 'yes' : 'no'}">
+            ${driver.kort === 'ja' ? '✓' : '✗'} Körtillstånd utfärdat
+          </div>
+          ${driver.doc ? '<div class="chk yes">✓ Dokument uppladdat</div>' : '<div class="chk no">✗ Dokument saknas</div>'}
         </div>
-        ${status !== 'green' ? `<div style="margin-top:16px;padding:12px 16px;background:${status==='yellow'?'var(--amber-bg)':'#fdf0f2'};border-radius:10px;font-size:14px;font-weight:600;color:${status==='yellow'?'var(--amber)':'var(--red)'};">${status==='not-approved' ? 'Information saknas — chauffören är ej godkänd för truckkörning. Kontakta personal.' : 'Kontakta personal för förnyelse av körtillstånd.'}</div>` : ''}
-        <div style="display:flex;gap:10px;margin-top:22px;justify-content:center;flex-wrap:wrap;">
+        ${status !== 'green' ? `
+          <div style="margin-top:16px;padding:14px 18px;background:#fdf0f2;border-radius:10px;font-size:14px;font-weight:600;color:var(--red);">
+            Information saknas — chauffören är ej godkänd för truckkörning. Kontakta personal.
+          </div>
+        ` : ''}
+        <div style="display:flex;gap:10px;margin-top:24px;justify-content:center;flex-wrap:wrap;">
           <button class="btn-reset" onclick="resetKiosk()" style="margin-top:0">Ny sökning</button>
-          <button class="btn-delete" onclick="deleteDriver('${match.id}', '${esc(match.name).replace(/'/g,"\\'")}')">🗑 Ta bort chaufför</button>
+          <button class="btn-delete" onclick="deleteDriver('${driver.id}', '${esc(driver.name).replace(/'/g, "\\'")}')">
+            🗑 Ta bort chaufför
+          </button>
         </div>
       </div>
-    </div>`;
+    </div>
+  `;
 }
 
+/**
+ * Reset kiosk to initial state
+ */
 function resetKiosk() {
+  console.log('[resetKiosk] Resetting kiosk');
   document.getElementById('k-input').value = '';
-  document.getElementById('kiosk-result').innerHTML = '<div class="idle-hint"><div class="big">👇</div><p>Skriv ditt namn och tryck Sök</p></div>';
+  document.getElementById('kiosk-result').innerHTML = `
+    <div class="idle-hint">
+      <div class="big">👇</div>
+      <p>Skriv ditt namn och tryck Sök</p>
+    </div>
+  `;
   document.getElementById('k-input').focus();
 }
 
-async function deleteDriver(id, name) {
-  if (!confirm(`Är du säker på att du vill ta bort ${name}?\n\nDetta kan inte ångras.`)) return;
-  try {
-    const res = await fetch(PA_WRITE_URL, {
-      method: 'POST',
-      headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({ action: 'delete', id: id })
-    });
-    if (!res.ok) throw new Error('HTTP ' + res.status);
-    showToast(`✓ ${name} har tagits bort`);
-    await loadData();
-    resetKiosk();
-  } catch(e) {
-    showToast('⚠ Fel vid borttagning: ' + e.message, '#c8102e');
-    console.error('Delete error:', e);
-  }
+// ═══════════════════════════════════════════════════════════════════════════
+// REGISTRATION FORM / Registreringsformulär
+// ═══════════════════════════════════════════════════════════════════════════
+
+/**
+ * Set toggle button state
+ * @param {string} field - Field name ('kort')
+ * @param {string} value - Value ('ja' or 'nej')
+ */
+function setToggle(field, value) {
+  console.log(`[setToggle] ${field} = ${value}`);
+  toggleState[field] = value;
+  document.getElementById(`${field}-ja`).className = 'toggle-btn' + (value === 'ja' ? ' active-yes' : '');
+  document.getElementById(`${field}-nej`).className = 'toggle-btn' + (value === 'nej' ? ' active-no' : '');
 }
 
-async function cleanupAllDrivers() {
-  // Triple-confirm för säkerhet
-  if (!confirm('⚠️ VARNING!\n\nDetta kommer radera ALLA chaufförer och deras dokument från databasen.\n\nÄr du helt säker?')) {
-    return;
-  }
-  
-  if (!confirm('⚠️ SISTA CHANSEN!\n\nDetta går INTE att ångra!\n\nAlla körtillstånd kommer raderas permanent.\n\nKlicka OK för att fortsätta.')) {
-    return;
-  }
-  
-  const finalConfirm = prompt('Skriv "RADERA ALLT" (stora bokstäver) för att bekräfta:');
-  if (finalConfirm !== 'RADERA ALLT') {
-    showToast('❌ Radering avbruten', '#6b7a99');
-    return;
-  }
-  
-  showToast('🗑️ Årlig cleanup påbörjad... Detta kan ta flera minuter.', '#d48000');
-  
-  let deleted = 0;
-  let failed = 0;
-  const total = db.length;
-  
-  for (const driver of db) {
-    try {
-      await fetch(PA_WRITE_URL, {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({ action: 'delete', id: driver.id })
-      });
-      deleted++;
-      
-      // Visa progress varje 5:e
-      if (deleted % 5 === 0 || deleted === total) {
-        showToast(`Raderar ${deleted} av ${total}...`, '#d48000');
-      }
-      
-      // Liten fördröjning för att inte överbelasta Power Automate
-      await new Promise(resolve => setTimeout(resolve, 100));
-      
-    } catch(e) {
-      failed++;
-      console.error(`Kunde inte radera ${driver.name}:`, e);
-    }
-  }
-  
-  showToast(`✓ Årlig cleanup genomförd!\n\n${deleted} chaufförer raderade${failed > 0 ? `\n${failed} misslyckades` : ''}`, '#1a7a3c');
-  
-  await loadData();
-}
-
-function renderWarn() {
-  const expiring = db.filter(r => getStatus(r) === 'yellow').sort((a,b) => getDaysLeft(a) - getDaysLeft(b));
-  document.getElementById('warn-banner-text').textContent = `${expiring.length} chaufförer utgår inom 30 dagar`;
-  const tbody = document.getElementById('warn-tbody');
-  if (!expiring.length) {
-    tbody.innerHTML = `<tr><td colspan="6"><div class="empty-ov">✅ Inga körtillstånd som utgår snart!</div></td></tr>`;
-    return;
-  }
-  tbody.innerHTML = expiring.map(r => {
-    const st   = getStatus(r);
-    const left = getDaysLeft(r);
-    const is24h = r.validity === '24h';
-    const leftStr = left === null ? '—' : left < 0 ? (is24h ? `${Math.abs(left)} tim sedan` : `${Math.abs(left)} dagar sedan`) : (is24h ? `${left} tim kvar` : `${left} dagar kvar`);
-    return `<tr class="row-${st==='expired'||st==='not-approved'?'red':st}">
-      <td>${statusPill(st)}</td>
-      <td class="td-name">${esc(r.name)}</td>
-      <td style="color:var(--muted)">${esc(r.date)}</td>
-      <td style="color:var(--muted)">${getExpiry(r)}</td>
-      <td style="font-weight:700;color:${st==='red'?'var(--red)':'var(--amber)'}">${leftStr}</td>
-      <td style="color:var(--muted)">${esc(r.by)}</td>
-    </tr>`;
-  }).join('');
-}
-
-function setToggle(field, val) {
-  toggleState[field] = val;
-  document.getElementById(`${field}-ja`).className  = 'toggle-btn' + (val==='ja'  ? ' active-yes' : '');
-  document.getElementById(`${field}-nej`).className = 'toggle-btn' + (val==='nej' ? ' active-no'  : '');
-}
-
-function setValidity(mode) {
-  validityMode = mode;
-  document.getElementById('validity-year').className = 'toggle-btn' + (mode==='year' ? ' active-yes' : '');
-  document.getElementById('validity-24h').className  = 'toggle-btn' + (mode==='24h'  ? ' active-no'  : '');
-}
-
+/**
+ * Handle document upload
+ * @param {HTMLInputElement} input - File input element
+ */
 function handleDocUpload(input) {
   const file = input.files[0];
   if (!file) return;
+  
+  console.log(`[handleDocUpload] Uploading: ${file.name} (${file.size} bytes)`);
+  
   const reader = new FileReader();
-  reader.onload = e => {
+  reader.onload = (e) => {
     docData = e.target.result;
     document.getElementById('upload-area').classList.add('has-file');
     document.getElementById('doc-name').textContent = '📎 ' + file.name;
+    console.log('[handleDocUpload] File loaded as base64');
   };
   reader.readAsDataURL(file);
 }
 
+/**
+ * Register a new driver
+ * Sends data to Power Automate which creates SharePoint entry + uploads document
+ */
 async function registerDriver() {
   const name = document.getElementById('r-name').value.trim();
   const date = document.getElementById('r-date').value;
-  const by   = document.getElementById('r-by').value.trim();
-  if (!name || !date || !by) { showToast('⚠ Fyll i namn, datum och inregistrerad av','#c8102e'); return; }
+  const by = document.getElementById('r-by').value.trim();
+  
+  if (!name || !date || !by) {
+    showToast('⚠ Fyll i namn, datum och inregistrerad av', '#c8102e');
+    return;
+  }
+  
+  console.log(`[registerDriver] Registering: ${name} (date: ${date}, by: ${by}, kort: ${toggleState.kort}, hasDoc: ${!!docData})`);
+  
   const btn = document.getElementById('btn-submit');
   btn.disabled = true;
   btn.innerHTML = '<div class="spinner"></div> Sparar…';
+  
   try {
-    const writeRes = await fetch(PA_WRITE_URL, {
+    // Send to Power Automate
+    // Data structure: [name, date, by, kort, docData]
+    const response = await fetch(PA_WRITE_URL, {
       method: 'POST',
-      headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({ 
-        action: 'write', 
-        row: [name, date, by, 'ja', toggleState.kort, docData||'', new Date().toISOString(), validityMode] 
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        action: 'write',
+        row: [name, date, by, toggleState.kort, docData || '']
       })
     });
-    if (!writeRes.ok) throw new Error('HTTP ' + writeRes.status);
+    
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}`);
+    }
+    
+    console.log('[registerDriver] Successfully registered');
+    
+    // Reset form
     document.getElementById('r-name').value = '';
     document.getElementById('r-date').valueAsDate = new Date();
     document.getElementById('r-by').value = '';
-    setToggle('kort','ja'); 
-    setValidity('year');
+    setToggle('kort', 'ja');
     docData = null;
     document.getElementById('upload-area').classList.remove('has-file');
     document.getElementById('doc-name').textContent = '';
     document.getElementById('doc-input').value = '';
+    
     showToast(`✓ ${name} är registrerad!`);
     await loadData();
-  } catch(e) {
-    showToast('⚠ Fel vid sparning: ' + e.message, '#c8102e');
-    console.error('Register error:', e);
+    
+  } catch (error) {
+    console.error('[registerDriver] Error:', error);
+    showToast('⚠ Fel vid sparning: ' + error.message, '#c8102e');
   }
+  
   btn.disabled = false;
   btn.innerHTML = 'Spara körtillstånd';
 }
 
-function renderOverview(query) {
-  const lower = (query||'').toLowerCase();
-  const rows  = lower ? db.filter(r => r.name.toLowerCase().includes(lower)) : [...db];
-  rows.sort((a,b) => {
-    const order = {red:0, yellow:1, green:2};
-    return order[getStatus(a)] - order[getStatus(b)];
+// ═══════════════════════════════════════════════════════════════════════════
+// OVERVIEW TABLE / Översiktstabell
+// ═══════════════════════════════════════════════════════════════════════════
+
+/**
+ * Render overview table with optional filtering
+ * @param {string} query - Search query for filtering
+ */
+function renderOverview(query = '') {
+  console.log(`[renderOverview] Rendering with query: "${query}"`);
+  
+  const lower = query.toLowerCase();
+  let rows = lower ? db.filter(r => r.name.toLowerCase().includes(lower)) : [...db];
+  
+  // Sort: not approved first, then approved
+  rows.sort((a, b) => {
+    const statusOrder = { red: 0, green: 1 };
+    return statusOrder[getStatus(a)] - statusOrder[getStatus(b)];
   });
-  document.getElementById('ov-count').textContent = query ? `${rows.length} av ${db.length} träffar` : `${db.length} registrerade`;
+  
+  // Update count display
+  const countText = query
+    ? `${rows.length} av ${db.length} träffar`
+    : `${db.length} registrerade`;
+  document.getElementById('ov-count').textContent = countText;
+  
   const tbody = document.getElementById('ov-tbody');
+  
   if (!rows.length) {
-    tbody.innerHTML = `<tr><td colspan="8"><div class="empty-ov">${db.length===0?'Inga chaufförer registrerade ännu.':'Ingen träff på "'+esc(query)+'"'}</div></td></tr>`;
+    const emptyMsg = db.length === 0
+      ? 'Inga chaufförer registrerade ännu.'
+      : `Ingen träff på "${esc(query)}"`;
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="7">
+          <div class="empty-ov">${emptyMsg}</div>
+        </td>
+      </tr>
+    `;
     return;
   }
-  tbody.innerHTML = rows.map(r => {
-    const st = getStatus(r);
-    const rJson = JSON.stringify(r).replace(/"/g, '&quot;');
-    return `<tr class="row-${st==='expired'||st==='not-approved'?'red':st}" style="cursor:pointer" onclick='openDriverModal(${rJson})'>
-      <td>${statusPill(st)}</td>
-      <td class="td-name">${hl(esc(r.name),lower)}</td>
-      <td style="color:var(--muted);font-size:13px">${esc(r.date)}</td>
-      <td style="color:var(--muted);font-size:13px">${getExpiry(r)}</td>
-      <td style="color:var(--muted)">${esc(r.by)}</td>
-      <td>${pill(r.kort)}</td>
-      <td>${r.doc?`<a href="${r.doc}" target="_blank" onclick="event.stopPropagation()" style="color:var(--blue);font-size:12px;font-weight:600;text-decoration:underline">Öppna</a>`:'<span style="color:var(--dim)">—</span>'}</td>
-      <td><button onclick="event.stopPropagation();deleteDriver('${r.id}', '${esc(r.name).replace(/'/g,"\\'")}');" style="background:none;border:none;cursor:pointer;color:var(--dim);padding:4px 8px;border-radius:6px;font-size:14px;transition:all .15s;" onmouseover="this.style.color='var(--red)';this.style.background='#fdf0f2'" onmouseout="this.style.color='var(--dim)';this.style.background='none'">✕</button></td>
-    </tr>`;
+  
+  tbody.innerHTML = rows.map(driver => {
+    const status = getStatus(driver);
+    const driverJson = JSON.stringify(driver).replace(/"/g, '&quot;');
+    
+    return `
+      <tr class="row-${status}" style="cursor:pointer" onclick='openDriverModal(${driverJson})'>
+        <td>${statusPill(status)}</td>
+        <td class="td-name">${hl(esc(driver.name), lower)}</td>
+        <td style="color:var(--muted);font-size:13px">${esc(driver.date)}</td>
+        <td style="color:var(--muted)">${esc(driver.by)}</td>
+        <td>${pill(driver.kort)}</td>
+        <td>
+          ${driver.doc
+            ? `<a href="${driver.doc}" target="_blank" onclick="event.stopPropagation()" style="color:var(--blue);font-size:12px;font-weight:600;text-decoration:underline">Öppna</a>`
+            : '<span style="color:var(--dim)">—</span>'
+          }
+        </td>
+        <td>
+          <button 
+            onclick="event.stopPropagation();deleteDriver('${driver.id}', '${esc(driver.name).replace(/'/g, "\\'")}');"
+            style="background:none;border:none;cursor:pointer;color:var(--dim);padding:4px 8px;border-radius:6px;font-size:14px;transition:all .15s;"
+            onmouseover="this.style.color='var(--red)';this.style.background='#fdf0f2'"
+            onmouseout="this.style.color='var(--dim)';this.style.background='none'">
+            ✕
+          </button>
+        </td>
+      </tr>
+    `;
   }).join('');
+  
+  console.log(`[renderOverview] Rendered ${rows.length} rows`);
 }
 
-let modalDocData = null;
-let modalToggleState = { kort: 'ja' };
+// ═══════════════════════════════════════════════════════════════════════════
+// NOT APPROVED PAGE / Ej godkända-sidan
+// ═══════════════════════════════════════════════════════════════════════════
 
+/**
+ * Render not approved drivers table
+ */
+function renderNotApproved() {
+  console.log('[renderNotApproved] Rendering...');
+  
+  const rows = db.filter(r => getStatus(r) === 'red');
+  const tbody = document.getElementById('notapproved-tbody');
+  
+  if (!rows.length) {
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="6">
+          <div class="empty-ov">✅ Inga ej godkända chaufförer!</div>
+        </td>
+      </tr>
+    `;
+    return;
+  }
+  
+  tbody.innerHTML = rows.map(driver => {
+    const driverJson = JSON.stringify(driver).replace(/"/g, '&quot;');
+    return `
+      <tr class="row-red" style="cursor:pointer" onclick='openDriverModal(${driverJson})'>
+        <td class="td-name">${esc(driver.name)}</td>
+        <td style="color:var(--muted);font-size:13px">${esc(driver.date)}</td>
+        <td style="color:var(--muted)">${esc(driver.by)}</td>
+        <td>${pill(driver.kort)}</td>
+        <td>
+          ${driver.doc
+            ? `<a href="${driver.doc}" target="_blank" onclick="event.stopPropagation()" style="color:var(--blue);font-size:12px;font-weight:600;text-decoration:underline">Öppna</a>`
+            : '<span style="color:var(--red);font-size:12px;font-weight:600">Saknas</span>'
+          }
+        </td>
+        <td>
+          <button 
+            onclick="event.stopPropagation();deleteDriver('${driver.id}', '${esc(driver.name).replace(/'/g, "\\'")}');"
+            style="background:none;border:none;cursor:pointer;color:var(--dim);padding:4px 8px;border-radius:6px;font-size:14px;"
+            onmouseover="this.style.color='var(--red)';this.style.background='#fdf0f2'"
+            onmouseout="this.style.color='var(--dim)';this.style.background='none'">
+            ✕
+          </button>
+        </td>
+      </tr>
+    `;
+  }).join('');
+  
+  console.log(`[renderNotApproved] Rendered ${rows.length} not approved drivers`);
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// DRIVER EDIT MODAL / Redigeringsmodal
+// ═══════════════════════════════════════════════════════════════════════════
+
+/**
+ * Open driver edit modal
+ * @param {object} driver - Driver record to edit
+ */
 function openDriverModal(driver) {
-  const st = getStatus(driver);
-  const stClass = st === 'green' ? 'green' : st === 'yellow' ? 'yellow' : 'red';
-  const stLabels = {'green':'✓ Godkänd','yellow':'⚠ Utgår snart','expired':'✗ Utgånget','not-approved':'✗ Ej godkänd'};
+  console.log(`[openDriverModal] Opening modal for: ${driver.name}`);
+  
+  const status = getStatus(driver);
+  const statusClass = status === 'green' ? 'green' : 'red';
+  const statusLabel = status === 'green' ? '✓ Godkänd' : '✗ Ej godkänd';
+  
+  // Populate modal fields
   document.getElementById('modal-id').value = driver.id;
   document.getElementById('modal-title').textContent = driver.name;
   document.getElementById('modal-name').value = driver.name;
   document.getElementById('modal-date').value = driver.date;
   document.getElementById('modal-by').value = driver.by;
+  
+  // Set status bar
   const statusBar = document.getElementById('modal-status-bar');
-  statusBar.className = 'modal-status-bar ' + stClass;
-  statusBar.textContent = (stLabels[st]||'') + ' — Går ut: ' + getExpiry(driver);
+  statusBar.className = 'modal-status-bar ' + statusClass;
+  statusBar.textContent = statusLabel;
+  
+  // Set toggle state
   setModalToggle('kort', driver.kort || 'ja');
+  
+  // Show current document
   const docCurrent = document.getElementById('modal-doc-current');
   if (driver.doc) {
-    docCurrent.innerHTML = `Nuvarande: <a href="${esc(driver.doc)}" target="_blank" style="color:var(--blue);text-decoration:underline;font-weight:600;">Öppna befintligt dokument</a>`;
+    docCurrent.innerHTML = `
+      Nuvarande: <a href="${esc(driver.doc)}" target="_blank" 
+        style="color:var(--blue);text-decoration:underline;font-weight:600;">
+        Öppna befintligt dokument
+      </a>
+    `;
   } else {
     docCurrent.textContent = 'Inget dokument sparat';
   }
+  
+  // Reset upload state
   modalDocData = null;
   document.getElementById('modal-doc-name').textContent = '';
   document.getElementById('modal-upload-area').classList.remove('has-file');
   document.getElementById('modal-doc-input').value = '';
+  
+  // Show modal
   document.getElementById('driver-modal').classList.add('open');
 }
 
+/**
+ * Close driver edit modal
+ */
 function closeModal() {
+  console.log('[closeModal] Closing modal');
   document.getElementById('driver-modal').classList.remove('open');
   modalDocData = null;
 }
 
-function setModalToggle(field, val) {
-  modalToggleState[field] = val;
-  document.getElementById(`modal-${field}-ja`).className  = 'toggle-btn' + (val==='ja'  ? ' active-yes' : '');
-  document.getElementById(`modal-${field}-nej`).className = 'toggle-btn' + (val==='nej' ? ' active-no'  : '');
+/**
+ * Set modal toggle state
+ * @param {string} field - Field name
+ * @param {string} value - Value
+ */
+function setModalToggle(field, value) {
+  modalToggleState[field] = value;
+  document.getElementById(`modal-${field}-ja`).className = 'toggle-btn' + (value === 'ja' ? ' active-yes' : '');
+  document.getElementById(`modal-${field}-nej`).className = 'toggle-btn' + (value === 'nej' ? ' active-no' : '');
 }
 
+/**
+ * Handle modal document upload
+ * @param {HTMLInputElement} input - File input element
+ */
 function handleModalDoc(input) {
   const file = input.files[0];
   if (!file) return;
+  
+  console.log(`[handleModalDoc] Uploading: ${file.name}`);
+  
   const reader = new FileReader();
-  reader.onload = e => {
+  reader.onload = (e) => {
     modalDocData = e.target.result;
     document.getElementById('modal-upload-area').classList.add('has-file');
     document.getElementById('modal-doc-name').textContent = '📎 ' + file.name;
+    console.log('[handleModalDoc] File loaded');
   };
   reader.readAsDataURL(file);
 }
 
+/**
+ * Save driver changes from modal
+ */
 async function saveDriver() {
-  const id   = document.getElementById('modal-id').value;
+  const id = document.getElementById('modal-id').value;
   const name = document.getElementById('modal-name').value.trim();
   const date = document.getElementById('modal-date').value;
-  const by   = document.getElementById('modal-by').value.trim();
-  if (!name || !date || !by) { showToast('⚠ Fyll i alla fält', '#c8102e'); return; }
+  const by = document.getElementById('modal-by').value.trim();
+  
+  if (!name || !date || !by) {
+    showToast('⚠ Fyll i alla fält', '#c8102e');
+    return;
+  }
+  
+  console.log(`[saveDriver] Updating driver ID ${id}: ${name}`);
+  
   const btn = document.getElementById('modal-save-btn');
   const txt = document.getElementById('modal-save-text');
-  btn.disabled = true; txt.textContent = 'Sparar…';
+  btn.disabled = true;
+  txt.textContent = 'Sparar…';
+  
   try {
+    // Use new document if uploaded, otherwise keep existing
     const currentDriver = db.find(r => r.id == id);
     const docToSave = modalDocData || (currentDriver ? currentDriver.doc : '');
-    const res = await fetch(PA_WRITE_URL, {
+    
+    const response = await fetch(PA_WRITE_URL, {
       method: 'POST',
-      headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({ 
-        action: 'update', 
-        id: id, 
-        row: [name, date, by, 'ja', modalToggleState.kort, docToSave, new Date().toISOString()] 
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        action: 'update',
+        id: id,
+        row: [name, date, by, modalToggleState.kort, docToSave]
       })
     });
-    if (!res.ok) throw new Error('HTTP ' + res.status);
+    
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}`);
+    }
+    
+    console.log('[saveDriver] Successfully updated');
     showToast(`✓ ${name} har uppdaterats!`);
     await loadData();
     closeModal();
-  } catch(e) {
-    showToast('⚠ Fel: ' + e.message, '#c8102e');
-    console.error('Update error:', e);
+    
+  } catch (error) {
+    console.error('[saveDriver] Error:', error);
+    showToast('⚠ Fel: ' + error.message, '#c8102e');
   }
-  btn.disabled = false; txt.textContent = 'Spara ändringar';
+  
+  btn.disabled = false;
+  txt.textContent = 'Spara ändringar';
 }
 
-function renderNotApproved() {
-  const rows = db.filter(r => getStatus(r) === 'not-approved');
-  const tbody = document.getElementById('notapproved-tbody');
-  if (!rows.length) {
-    tbody.innerHTML = `<tr><td colspan="6"><div class="empty-ov">✅ Inga ej godkända chaufförer!</div></td></tr>`;
-    return;
-  }
-  tbody.innerHTML = rows.map(r => {
-    const rJson = JSON.stringify(r).replace(/"/g, '&quot;');
-    return `<tr class="row-red" style="cursor:pointer" onclick='openDriverModal(${rJson})'>
-      <td class="td-name">${esc(r.name)}</td>
-      <td style="color:var(--muted);font-size:13px">${esc(r.date)}</td>
-      <td style="color:var(--muted)">${esc(r.by)}</td>
-      <td>${pill(r.kort)}</td>
-      <td>${r.doc ? `<a href="${r.doc}" target="_blank" onclick="event.stopPropagation()" style="color:var(--blue);font-size:12px;font-weight:600;text-decoration:underline">Öppna</a>` : '<span style="color:var(--red);font-size:12px;font-weight:600">Saknas</span>'}</td>
-      <td><button onclick="event.stopPropagation();deleteDriver('${r.id}', '${esc(r.name).replace(/'/g,"\\'")}');" style="background:none;border:none;cursor:pointer;color:var(--dim);padding:4px 8px;border-radius:6px;font-size:14px;" onmouseover="this.style.color='var(--red)';this.style.background='#fdf0f2'" onmouseout="this.style.color='var(--dim)';this.style.background='none'">✕</button></td>
-    </tr>`;
-  }).join('');
-}
+// ═══════════════════════════════════════════════════════════════════════════
+// INITIALIZATION / Initiering
+// ═══════════════════════════════════════════════════════════════════════════
 
-function exportCSV() {
-  const headers = ['Namn chaufför','Datum','Inregistrerad av','Körtillstånd','Går ut','Status'];
-  const csv = [headers, ...db.map(r => [r.name,r.date,r.by,r.kort,getExpiry(r),getStatus(r)])]
-    .map(r => r.map(v => `"${v}"`).join(',')).join('\n');
-  const a = document.createElement('a');
-  a.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent('\uFEFF'+csv);
-  a.download = `kortillstand_${new Date().toISOString().slice(0,10)}.csv`;
-  a.click();
-  showToast('✓ CSV exporterad!');
-}
+console.log('[Init] Körtillstånd App v2.0 starting...');
 
-function showToast(msg, bg='#1a7a3c') {
-  const t = document.getElementById('toast');
-  t.textContent = msg; t.style.background = bg;
-  t.classList.add('show');
-  setTimeout(() => t.classList.remove('show'), 3500);
-}
-
-function statusPill(st) {
-  if (st==='green')        return '<span class="pill green">✓ Godkänd</span>';
-  if (st==='yellow')       return '<span class="pill yellow">⚠ Utgår snart</span>';
-  if (st==='expired')      return '<span class="pill red">✗ Utgånget</span>';
-  if (st==='not-approved') return '<span class="pill red">✗ Ej godkänd</span>';
-  return '<span class="pill red">✗ Ej godkänd</span>';
-}
-
-function pill(v) { 
-  return v==='ja'?'<span class="pill yes">✓ Ja</span>':'<span class="pill no">✗ Nej</span>'; 
-}
-
-function hl(text,q) { 
-  if(!q) return text; 
-  return text.replace(new RegExp(`(${q.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')})`, 'gi'),'<mark>$1</mark>'); 
-}
-
-function esc(s) { 
-  return String(s||'')
-    .replace(/&/g,'&amp;')
-    .replace(/</g,'&lt;')
-    .replace(/>/g,'&gt;')
-    .replace(/"/g,'&quot;')
-    .replace(/'/g,'&#39;'); 
-}
-
+// Set default date to today
 document.getElementById('r-date').valueAsDate = new Date();
+
+// Focus search input
 document.getElementById('k-input').focus();
+
+// Start clock
+tick();
+setInterval(tick, 1000);
+
+// Load initial data
 loadData();
+
+// Auto-refresh every minute
 setInterval(loadData, 60000);
+
+console.log('[Init] App initialized successfully');
 </script>
+
 </body>
 </html>
