@@ -1139,6 +1139,248 @@ mark {
   background: #fdf0f2;
   color: var(--red);
 }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   STATISTICS SIDEBAR / Statistik-sidebar
+   ═══════════════════════════════════════════════════════════════════════════ */
+.stats-sidebar {
+  position: fixed;
+  top: 0;
+  right: -500px;
+  width: 500px;
+  height: 100vh;
+  background: var(--surface);
+  box-shadow: -4px 0 24px rgba(15,28,46,0.15);
+  z-index: 300;
+  transition: right .3s cubic-bezier(.34,1.56,.64,1);
+  overflow-y: auto;
+}
+
+.stats-sidebar.open {
+  right: 0;
+}
+
+.stats-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100vh;
+  background: rgba(15,28,46,0.4);
+  z-index: 299;
+  display: none;
+  animation: fadeIn .2s ease;
+}
+
+.stats-overlay.open {
+  display: block;
+}
+
+.stats-header {
+  background: var(--blue);
+  padding: 24px 28px;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.stats-title {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 24px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: .05em;
+}
+
+.stats-close {
+  background: rgba(255,255,255,0.1);
+  border: none;
+  color: white;
+  font-size: 20px;
+  cursor: pointer;
+  padding: 8px 12px;
+  border-radius: 8px;
+  transition: all .15s;
+}
+
+.stats-close:hover {
+  background: rgba(255,255,255,0.2);
+}
+
+.stats-body {
+  padding: 28px;
+}
+
+.stats-section {
+  margin-bottom: 36px;
+}
+
+.stats-section-title {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--blue);
+  text-transform: uppercase;
+  margin-bottom: 16px;
+  letter-spacing: .05em;
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.stats-card {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 16px;
+  text-align: center;
+}
+
+.stats-card-value {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 36px;
+  font-weight: 800;
+  color: var(--blue);
+  line-height: 1;
+}
+
+.stats-card-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--muted);
+  text-transform: uppercase;
+  margin-top: 6px;
+  letter-spacing: .05em;
+}
+
+.chart-container {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 20px;
+}
+
+.chart-bars {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  height: 200px;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.chart-bar {
+  flex: 1;
+  background: var(--blue);
+  border-radius: 6px 6px 0 0;
+  position: relative;
+  min-height: 4px;
+  transition: all .3s cubic-bezier(.34,1.56,.64,1);
+  cursor: pointer;
+}
+
+.chart-bar:hover {
+  background: #2a5a1e;
+  transform: translateY(-4px);
+}
+
+.chart-bar-value {
+  position: absolute;
+  top: -24px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text);
+  white-space: nowrap;
+}
+
+.chart-labels {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.chart-label {
+  flex: 1;
+  text-align: center;
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--muted);
+  text-transform: uppercase;
+}
+
+.top-list {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.top-list-item {
+  padding: 14px 18px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--border);
+}
+
+.top-list-item:last-child {
+  border-bottom: none;
+}
+
+.top-list-rank {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--blue);
+  width: 32px;
+  text-align: center;
+}
+
+.top-list-name {
+  flex: 1;
+  font-weight: 600;
+  color: var(--text);
+  margin-left: 12px;
+}
+
+.top-list-value {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--muted);
+}
+
+.stats-hint {
+  text-align: center;
+  padding: 12px;
+  background: var(--bg);
+  border-radius: 8px;
+  font-size: 12px;
+  color: var(--muted);
+  margin-top: 20px;
+}
+
+.stats-hint kbd {
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 2px 6px;
+  font-family: 'Courier New', monospace;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text);
+}
 </style>
 </head>
 <body>
@@ -1383,6 +1625,68 @@ mark {
         <span id="modal-save-text">Spara ändringar</span>
       </button>
     </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     STATISTICS SIDEBAR
+     ═══════════════════════════════════════════════════════════════════════════ -->
+<div class="stats-overlay" id="stats-overlay" onclick="closeStats()"></div>
+<div class="stats-sidebar" id="stats-sidebar">
+  <div class="stats-header">
+    <div class="stats-title">📊 Statistik</div>
+    <button class="stats-close" onclick="closeStats()">✕</button>
+  </div>
+  <div class="stats-body">
+    
+    <!-- Quick stats cards -->
+    <div class="stats-section">
+      <div class="stats-section-title">Översikt</div>
+      <div class="stats-grid">
+        <div class="stats-card">
+          <div class="stats-card-value" id="stat-total">0</div>
+          <div class="stats-card-label">Totalt registrerade</div>
+        </div>
+        <div class="stats-card">
+          <div class="stats-card-value" id="stat-approved">0</div>
+          <div class="stats-card-label">Godkända</div>
+        </div>
+        <div class="stats-card">
+          <div class="stats-card-value" id="stat-not-approved">0</div>
+          <div class="stats-card-label">Ej godkända</div>
+        </div>
+        <div class="stats-card">
+          <div class="stats-card-value" id="stat-with-docs">0</div>
+          <div class="stats-card-label">Med dokument</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Monthly registrations chart -->
+    <div class="stats-section">
+      <div class="stats-section-title">Registreringar per månad</div>
+      <div class="chart-container">
+        <div class="chart-bars" id="monthly-chart"></div>
+        <div class="chart-labels" id="monthly-labels"></div>
+      </div>
+    </div>
+
+    <!-- Top registrars -->
+    <div class="stats-section">
+      <div class="stats-section-title">Top 5 Registrerare</div>
+      <div class="top-list" id="top-registrars"></div>
+    </div>
+
+    <!-- Top months -->
+    <div class="stats-section">
+      <div class="stats-section-title">Top 5 Månader</div>
+      <div class="top-list" id="top-months"></div>
+    </div>
+
+    <div class="stats-hint">
+      Tryck <kbd>Esc</kbd> eller <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>S</kbd> för att stänga
+    </div>
+
   </div>
 </div>
 
@@ -2327,6 +2631,220 @@ async function saveDriver() {
   btn.disabled = false;
   txt.textContent = 'Spara ändringar';
 }
+
+// ═══════════════════════════════════════════════════════════════════════════
+// STATISTICS SIDEBAR / Statistik-funktioner
+// ═══════════════════════════════════════════════════════════════════════════
+
+/**
+ * Open statistics sidebar
+ */
+function openStats() {
+  console.log('[openStats] Opening statistics sidebar');
+  
+  // Calculate all statistics
+  calculateStats();
+  
+  // Show sidebar
+  document.getElementById('stats-overlay').classList.add('open');
+  document.getElementById('stats-sidebar').classList.add('open');
+}
+
+/**
+ * Close statistics sidebar
+ */
+function closeStats() {
+  console.log('[closeStats] Closing statistics sidebar');
+  document.getElementById('stats-overlay').classList.remove('open');
+  document.getElementById('stats-sidebar').classList.remove('open');
+}
+
+/**
+ * Calculate and render all statistics
+ */
+function calculateStats() {
+  console.log('[calculateStats] Calculating statistics...');
+  
+  // Quick stats
+  const total = db.length;
+  const approved = db.filter(r => getStatus(r) === 'green').length;
+  const notApproved = db.filter(r => getStatus(r) === 'red').length;
+  const withDocs = db.filter(r => r.doc).length;
+  
+  document.getElementById('stat-total').textContent = total;
+  document.getElementById('stat-approved').textContent = approved;
+  document.getElementById('stat-not-approved').textContent = notApproved;
+  document.getElementById('stat-with-docs').textContent = withDocs;
+  
+  // Monthly registrations (last 12 months)
+  renderMonthlyChart();
+  
+  // Top registrars
+  renderTopRegistrars();
+  
+  // Top months (all time)
+  renderTopMonths();
+  
+  console.log('[calculateStats] Statistics calculated successfully');
+}
+
+/**
+ * Render monthly registrations chart (last 12 months)
+ */
+function renderMonthlyChart() {
+  const now = new Date();
+  const monthsData = [];
+  
+  // Get last 12 months
+  for (let i = 11; i >= 0; i--) {
+    const date = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    const monthKey = date.toISOString().slice(0, 7); // YYYY-MM
+    const monthLabel = date.toLocaleDateString('sv-SE', { month: 'short' });
+    
+    // Count registrations in this month
+    const count = db.filter(r => r.date && r.date.slice(0, 7) === monthKey).length;
+    
+    monthsData.push({
+      label: monthLabel,
+      value: count,
+      monthKey: monthKey
+    });
+  }
+  
+  // Find max value for scaling
+  const maxValue = Math.max(...monthsData.map(m => m.value), 1);
+  
+  // Render bars
+  const barsContainer = document.getElementById('monthly-chart');
+  barsContainer.innerHTML = monthsData.map(month => {
+    const heightPercent = (month.value / maxValue) * 100;
+    return `
+      <div class="chart-bar" style="height:${heightPercent}%" title="${month.label}: ${month.value} registreringar">
+        <div class="chart-bar-value">${month.value}</div>
+      </div>
+    `;
+  }).join('');
+  
+  // Render labels
+  const labelsContainer = document.getElementById('monthly-labels');
+  labelsContainer.innerHTML = monthsData.map(month => 
+    `<div class="chart-label">${month.label}</div>`
+  ).join('');
+  
+  console.log(`[renderMonthlyChart] Rendered chart with max value: ${maxValue}`);
+}
+
+/**
+ * Render top 5 registrars
+ */
+function renderTopRegistrars() {
+  // Count registrations per person
+  const registrarCounts = {};
+  db.forEach(driver => {
+    const by = driver.by || 'Okänd';
+    registrarCounts[by] = (registrarCounts[by] || 0) + 1;
+  });
+  
+  // Sort and get top 5
+  const sorted = Object.entries(registrarCounts)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 5);
+  
+  const container = document.getElementById('top-registrars');
+  
+  if (sorted.length === 0) {
+    container.innerHTML = '<div style="padding:20px;text-align:center;color:var(--dim)">Ingen data</div>';
+    return;
+  }
+  
+  container.innerHTML = sorted.map((item, index) => `
+    <div class="top-list-item">
+      <div class="top-list-rank">${index + 1}</div>
+      <div class="top-list-name">${esc(item[0])}</div>
+      <div class="top-list-value">${item[1]}</div>
+    </div>
+  `).join('');
+  
+  console.log(`[renderTopRegistrars] Top registrar: ${sorted[0][0]} with ${sorted[0][1]} registrations`);
+}
+
+/**
+ * Render top 5 months (all time)
+ */
+function renderTopMonths() {
+  // Count registrations per month
+  const monthCounts = {};
+  db.forEach(driver => {
+    if (!driver.date) return;
+    const monthKey = driver.date.slice(0, 7); // YYYY-MM
+    monthCounts[monthKey] = (monthCounts[monthKey] || 0) + 1;
+  });
+  
+  // Sort and get top 5
+  const sorted = Object.entries(monthCounts)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 5);
+  
+  const container = document.getElementById('top-months');
+  
+  if (sorted.length === 0) {
+    container.innerHTML = '<div style="padding:20px;text-align:center;color:var(--dim)">Ingen data</div>';
+    return;
+  }
+  
+  container.innerHTML = sorted.map((item, index) => {
+    // Format month: "2024-03" -> "Mars 2024"
+    const [year, month] = item[0].split('-');
+    const date = new Date(year, parseInt(month) - 1, 1);
+    const monthName = date.toLocaleDateString('sv-SE', { month: 'long', year: 'numeric' });
+    const capitalizedMonth = monthName.charAt(0).toUpperCase() + monthName.slice(1);
+    
+    return `
+      <div class="top-list-item">
+        <div class="top-list-rank">${index + 1}</div>
+        <div class="top-list-name">${capitalizedMonth}</div>
+        <div class="top-list-value">${item[1]}</div>
+      </div>
+    `;
+  }).join('');
+  
+  console.log(`[renderTopMonths] Top month: ${sorted[0][0]} with ${sorted[0][1]} registrations`);
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// KEYBOARD SHORTCUTS / Tangentbordsgenvägar
+// ═══════════════════════════════════════════════════════════════════════════
+
+/**
+ * Handle keyboard shortcuts
+ */
+document.addEventListener('keydown', (e) => {
+  // Ctrl + Shift + S: Toggle statistics
+  if (e.ctrlKey && e.shiftKey && e.key === 'S') {
+    e.preventDefault();
+    const sidebar = document.getElementById('stats-sidebar');
+    if (sidebar.classList.contains('open')) {
+      closeStats();
+    } else {
+      openStats();
+    }
+    console.log('[Keyboard] Ctrl+Shift+S triggered - toggled stats');
+  }
+  
+  // Esc: Close statistics or modal
+  if (e.key === 'Escape') {
+    const sidebar = document.getElementById('stats-sidebar');
+    const modal = document.getElementById('driver-modal');
+    
+    if (sidebar.classList.contains('open')) {
+      closeStats();
+      console.log('[Keyboard] Esc - closed stats');
+    } else if (modal.classList.contains('open')) {
+      closeModal();
+      console.log('[Keyboard] Esc - closed modal');
+    }
+  }
+});
 
 // ═══════════════════════════════════════════════════════════════════════════
 // INITIALIZATION / Initiering
