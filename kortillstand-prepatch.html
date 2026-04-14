@@ -1684,7 +1684,7 @@ mark {
     </div>
 
     <div class="stats-hint">
-      Tryck <kbd>Esc</kbd> eller <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>S</kbd> för att stänga
+      Tryck <kbd>Esc</kbd> eller <kbd>Alt</kbd>+<kbd>S</kbd> för att stänga
     </div>
 
   </div>
@@ -2819,8 +2819,8 @@ function renderTopMonths() {
  * Handle keyboard shortcuts
  */
 document.addEventListener('keydown', (e) => {
-  // Ctrl + Shift + S: Toggle statistics
-  if (e.ctrlKey && e.shiftKey && e.key === 'S') {
+  // Alt + S: Toggle statistics
+  if (e.altKey && (e.key === 's' || e.key === 'S')) {
     e.preventDefault();
     const sidebar = document.getElementById('stats-sidebar');
     if (sidebar.classList.contains('open')) {
@@ -2828,7 +2828,7 @@ document.addEventListener('keydown', (e) => {
     } else {
       openStats();
     }
-    console.log('[Keyboard] Ctrl+Shift+S triggered - toggled stats');
+    console.log('[Keyboard] Alt+S triggered - toggled stats');
   }
   
   // Esc: Close statistics or modal
