@@ -1455,7 +1455,7 @@ mark {
   <div class="reg-page">
     <div class="page-title">Registrera chaufför</div>
     <div class="page-sub">
-      Fyll i uppgifterna och spara. Körtillståndet gäller tills nästa årliga cleanup körs (vanligtvis 1 januari).
+      Fyll i uppgifterna och spara. Körtillståndet gäller tills nästa år.
     </div>
     <div class="form-card">
       <div class="form-grid">
@@ -1670,7 +1670,7 @@ mark {
 
     <!-- Monthly registrations chart -->
     <div class="stats-section">
-      <div class="stats-section-title">Registreringar per månad</div>
+      <div class="stats-section-title" id="monthly-chart-title">Registreringar per månad</div>
       <div class="chart-container">
         <div class="chart-bars" id="monthly-chart"></div>
         <div class="chart-labels" id="monthly-labels"></div>
@@ -2695,15 +2695,22 @@ function calculateStats() {
 }
 
 /**
- * Render monthly registrations chart (last 12 months)
+ * Render monthly registrations chart (January to current month of current year)
  */
 function renderMonthlyChart() {
   const now = new Date();
+  const currentYear = now.getFullYear();
+  const currentMonth = now.getMonth(); // 0-11
+  const currentMonthName = now.toLocaleDateString('sv-SE', { month: 'short' });
   const monthsData = [];
   
-  // Get last 12 months
-  for (let i = 11; i >= 0; i--) {
-    const date = new Date(now.getFullYear(), now.getMonth() - i, 1);
+  // Update chart title dynamically
+  document.getElementById('monthly-chart-title').textContent = 
+    `Registreringar ${currentYear} (Jan–${currentMonthName})`;
+  
+  // Get months from January to current month
+  for (let i = 0; i <= currentMonth; i++) {
+    const date = new Date(currentYear, i, 1);
     const monthKey = date.toISOString().slice(0, 7); // YYYY-MM
     const monthLabel = date.toLocaleDateString('sv-SE', { month: 'short' });
     
@@ -2737,7 +2744,7 @@ function renderMonthlyChart() {
     `<div class="chart-label">${month.label}</div>`
   ).join('');
   
-  console.log(`[renderMonthlyChart] Rendered chart with max value: ${maxValue}`);
+  console.log(`[renderMonthlyChart] Rendered ${monthsData.length} months (Jan–${currentMonthName} ${currentYear}) with max value: ${maxValue}`);
 }
 
 /**
