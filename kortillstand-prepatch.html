@@ -1455,7 +1455,7 @@ mark {
   <div class="reg-page">
     <div class="page-title">Registrera chaufför</div>
     <div class="page-sub">
-      Fyll i uppgifterna och spara. Körtillståndet gäller tills nästa år.
+      Fyll i uppgifterna och spara. Körtillståndet gäller tills nästa årliga cleanup körs (vanligtvis 1 januari).
     </div>
     <div class="form-card">
       <div class="form-grid">
@@ -1615,13 +1615,8 @@ mark {
         </div>
         <div class="modal-group full">
           <div class="modal-label">Dokument</div>
-          <div id="modal-doc-current" style="font-size:13px;color:var(--muted);margin-bottom:8px;"></div>
-          <div class="upload-area" id="modal-upload-area" onclick="document.getElementById('modal-doc-input').click()" style="padding:14px">
-            <div style="font-size:20px">📄</div>
-            <div style="font-size:12px;color:var(--muted);margin-top:4px;">Klicka för att ladda upp nytt dokument</div>
-          </div>
-          <input type="file" id="modal-doc-input" accept=".pdf,.jpg,.jpeg,.png" onchange="handleModalDoc(this)" style="display:none">
-          <div id="modal-doc-name" style="font-size:12px;color:var(--muted);margin-top:6px;"></div>
+          <div id="modal-doc-current" style="font-size:13px;color:var(--muted);padding:12px;background:var(--bg);border-radius:8px;"></div>
+          <div style="font-size:11px;color:var(--dim);margin-top:6px;">💡 Dokumentet kan inte ändras efter registrering</div>
         </div>
       </div>
     </div>
@@ -1731,7 +1726,6 @@ let toggleState = { kort: 'ja' };  // körtillstånd toggle state
 let docData = null;                // uploaded document base64 data
 
 // Modal state for editing
-let modalDocData = null;
 let modalToggleState = { kort: 'ja' };
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -2521,24 +2515,18 @@ function openDriverModal(driver) {
   // Set toggle state
   setModalToggle('kort', driver.kort || 'ja');
   
-  // Show current document
+  // Show current document (read-only)
   const docCurrent = document.getElementById('modal-doc-current');
   if (driver.doc) {
     docCurrent.innerHTML = `
-      Nuvarande: <a href="${esc(driver.doc)}" target="_blank" 
+      <a href="${esc(driver.doc)}" target="_blank" 
         style="color:var(--blue);text-decoration:underline;font-weight:600;">
-        Öppna befintligt dokument
+        📄 Öppna befintligt dokument
       </a>
     `;
   } else {
-    docCurrent.textContent = 'Inget dokument sparat';
+    docCurrent.innerHTML = '<span style="color:var(--dim)">Inget dokument sparat</span>';
   }
-  
-  // Reset upload state
-  modalDocData = null;
-  document.getElementById('modal-doc-name').textContent = '';
-  document.getElementById('modal-upload-area').classList.remove('has-file');
-  document.getElementById('modal-doc-input').value = '';
   
   // Show modal
   document.getElementById('driver-modal').classList.add('open');
@@ -2568,22 +2556,6 @@ function setModalToggle(field, value) {
  * Handle modal document upload
  * @param {HTMLInputElement} input - File input element
  */
-function handleModalDoc(input) {
-  const file = input.files[0];
-  if (!file) return;
-  
-  console.log(`[handleModalDoc] Uploading: ${file.name}`);
-  
-  const reader = new FileReader();
-  reader.onload = (e) => {
-    modalDocData = e.target.result;
-    document.getElementById('modal-upload-area').classList.add('has-file');
-    document.getElementById('modal-doc-name').textContent = '📎 ' + file.name;
-    console.log('[handleModalDoc] File loaded');
-  };
-  reader.readAsDataURL(file);
-}
-
 /**
  * Save driver changes from modal
  */
@@ -2606,9 +2578,9 @@ async function saveDriver() {
   txt.textContent = 'Sparar…';
   
   try {
-    // Use new document if uploaded, otherwise keep existing
+    // Always keep existing document URL (no new uploads allowed)
     const currentDriver = db.find(r => r.id == id);
-    const docToSave = modalDocData || (currentDriver ? currentDriver.doc : '');
+    const docToKeep = currentDriver ? currentDriver.doc : '';
     
     const response = await fetch(PA_WRITE_URL, {
       method: 'POST',
@@ -2616,7 +2588,7 @@ async function saveDriver() {
       body: JSON.stringify({
         action: 'update',
         id: id,
-        row: [name, date, by, modalToggleState.kort, docToSave]
+        row: [name, date, by, modalToggleState.kort, docToKeep]
       })
     });
     
