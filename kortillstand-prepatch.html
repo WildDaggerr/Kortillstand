@@ -1415,12 +1415,6 @@ mark {
       <span id="sync-text">Ansluter…</span>
     </div>
     <span class="db-count" id="db-count">— registrerade</span>
-    <button class="btn-icon" onclick="openStats()" style="background:rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.2);color:white;padding:8px 14px;">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-        <line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/>
-      </svg>
-      Statistik
-    </button>
     <div class="clock" id="clock"></div>
   </div>
 </div>
@@ -1432,7 +1426,6 @@ mark {
   <div class="kiosk">
     <div>
       <h1>Välkommen till Orkla Kumla</h1>
-      <p>Skriv ditt namn nedan för att kontrollera ditt körtillstånd</p>
     </div>
     <div class="search-box">
       <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#b0b8cc" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
@@ -1441,8 +1434,8 @@ mark {
     </div>
     <div class="kiosk-result" id="kiosk-result">
       <div class="idle-hint">
-        <div class="big">👇</div>
-        <p>Skriv ditt namn och tryck Sök</p>
+        <div class="big">☝️</div>
+        <p>Skriv ditt namn ovan för att kontrollera ditt körtillstånd</p>
       </div>
     </div>
   </div>
@@ -1455,7 +1448,7 @@ mark {
   <div class="reg-page">
     <div class="page-title">Registrera chaufför</div>
     <div class="page-sub">
-      Fyll i uppgifterna och spara. Körtillståndet gäller tills nästa årliga cleanup körs (vanligtvis 1 januari).
+      Fyll i uppgifterna och spara. Körtillståndet gäller till nästa år.
     </div>
     <div class="form-card">
       <div class="form-grid">
@@ -1473,7 +1466,7 @@ mark {
         </div>
         <div class="form-divider"></div>
         <div class="form-group full">
-          <label>Körtillstånd godkänt?</label>
+          <label>Körtillstånd utfärdat</label>
           <div class="toggle-group">
             <button class="toggle-btn active-yes" id="kort-ja" onclick="setToggle('kort','ja')">✓ Ja</button>
             <button class="toggle-btn" id="kort-nej" onclick="setToggle('kort','nej')">✗ Nej</button>
